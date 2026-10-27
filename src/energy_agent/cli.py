@@ -84,6 +84,40 @@ def cmd_tool(args: argparse.Namespace) -> None:
     print(json.dumps(result, ensure_ascii=False, indent=2))
 
 
+def _print_event(event: dict) -> None:
+    if event["event"] == "tool_call":
+        args = json.dumps(event["arguments"], ensure_ascii=False)
+        status = f"error: {event['error']}" if event["error"] else "ok"
+        print(f"  → {event['tool']}({args})  [{status}]")
+    elif event["event"] == "llm_call":
+        print(f"  · LLM call {event['step']}: {event['latency_ms']} ms")
+
+
+def cmd_ask(args: argparse.Namespace) -> None:
+    from energy_agent.agent import Agent
+    from energy_agent.llm import create_chat_model
+    from energy_agent.rag.embeddings import OllamaEmbedder
+    from energy_agent.rag.search import Retriever
+    from energy_agent.rag.store import connect
+    from energy_agent.tools.registry import build_tools
+    from energy_agent.tracing import TRACE_FILE, Tracer
+
+    settings = get_settings()
+    model = create_chat_model(settings, args.provider)
+    embedder = OllamaEmbedder(settings.ollama_host, settings.embedding_model)
+    print(f"{model.provider} / {model.model}")
+    with connect(settings.database_url) as conn:
+        tools = build_tools(conn, Retriever(conn, embedder))
+        agent = Agent(model, tools, Tracer(on_event=_print_event))
+        result = agent.run(args.question)
+    print(f"\n{result.answer}\n")
+    print(
+        f"[{result.llm_calls} LLM calls, {len(result.tool_calls)} tool calls, "
+        f"{result.prompt_tokens}+{result.completion_tokens} tokens, "
+        f"{result.latency_ms / 1000:.1f} s, trace {result.run_id} in {TRACE_FILE.name}]"
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(prog="energy-agent")
     commands = parser.add_subparsers(required=True)
@@ -114,6 +148,11 @@ def main() -> None:
     tool.add_argument("name")
     tool.add_argument("arguments", help='JSON, e.g. \'{"request_id": "LW-2026-0003"}\'')
     tool.set_defaults(func=cmd_tool)
+
+    ask = commands.add_parser("ask", help="ask the agent a question")
+    ask.add_argument("question")
+    ask.add_argument("--provider", choices=["mistral", "ollama"], help="default: LLM_PROVIDER")
+    ask.set_defaults(func=cmd_ask)
 
     args = parser.parse_args()
     args.func(args)

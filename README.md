@@ -22,8 +22,57 @@ uv run energy-agent ingest                  # parse, chunk, embed, store (~1 min
 uv run energy-agent seed                    # test data for supplier switch requests
 uv run energy-agent search "Wer beliefert einen Kunden in der Ersatzversorgung?"
 uv run energy-agent tool calculate_deadline '{"process": "lieferbeginn", "step": 6, "step1_sent_at": "2026-12-23T10:00"}'
+uv run energy-agent ask "Wie ist der Status von LW-2026-0003 und bis wann muss der NB antworten?"
+uv run energy-agent ask --provider ollama "..."   # same agent, local model (ollama pull qwen3:8b)
 uv run pytest                               # unit + integration tests
 ```
+
+Example run (Mistral `ministral-8b-latest`, free API tier):
+
+```
+$ uv run energy-agent ask "Wie ist der Status der Wechselanfrage LW-2026-0003 und bis wann muss der Netzbetreiber spätestens antworten?"
+  · LLM call 1: 593 ms
+  → get_switch_status({"request_id": "LW-2026-0003"})  [ok]
+  · LLM call 2: 1040 ms
+  → calculate_deadline({"process": "lieferbeginn", "step": 6, "step1_sent_at": "2026-10-26T17:20:00"})  [ok]
+  · LLM call 3: 1205 ms
+
+Die Wechselanfrage LW-2026-0003 (MaLo-ID: 51002003005) ist aktuell angemeldet und wartet auf die
+Antwort des Netzbetreibers (Testnetz Rhein GmbH). Der Netzbetreiber muss die Anmeldung spätestens
+bis zum 27.10.2026, 11:00 Uhr ablehnen oder bestätigen.
+Quelle: GPKE Teil 2 (Anlage 1b zu BK6-22-024), 2.1.2 SD: Lieferbeginn, Nr. 6, S. 21.
+
+[3 LLM calls, 2 tool calls, 4656+233 tokens, 2.8 s, trace 6aa7b1ca7d82 in traces.jsonl]
+```
+
+## Agent and LLM layer
+
+```
+question ─▶ Agent ──messages + tool schemas──▶ ChatModel ─┬─ MistralChat (hosted, EU)
+              ▲                                            └─ OllamaChat  (local)
+              │  tool calls
+              ▼
+     search_documents · calculate_deadline · get_switch_status
+              │
+              └─▶ Tracer ──▶ logs/traces.jsonl (one JSON object per step)
+```
+
+- **Plain tool-calling loop** ([`agent.py`](src/energy_agent/agent.py)): send messages and
+  tool schemas, run the tool calls the model returns, append the results, repeat until the
+  model answers in text. The step budget is 6; the last step offers no tools, which forces
+  an answer. No framework: the loop is ~60 lines and every step is visible.
+- **Provider-agnostic** ([`llm/`](src/energy_agent/llm)): the agent only knows `Message`,
+  `ToolCall` and the `ChatModel` protocol. The adapters handle the differences: Mistral
+  returns tool arguments as a JSON string and assigns call ids; Ollama returns a JSON object
+  and no ids, and its tool results are matched by tool name. The Mistral adapter retries
+  `429` responses with `Retry-After`; the Ollama adapter raises the context window to 16k
+  tokens (the default would silently truncate retrieved passages) and turns off qwen3's
+  thinking mode.
+- **Tracing** ([`tracing.py`](src/energy_agent/tracing.py)): every run writes `run_start`,
+  `llm_call` (latency, tokens, requested tools), `tool_call` (arguments, result, error) and
+  `run_end` events with a shared `run_id` to `logs/traces.jsonl`.
+- **Tests** use a scripted fake model for the loop and mocked HTTP for both adapters, so they
+  run without network or API key.
 
 ## Retrieval (RAG)
 

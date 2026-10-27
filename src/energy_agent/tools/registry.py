@@ -13,7 +13,7 @@ import psycopg
 from pydantic import BaseModel, Field, ValidationError, model_validator
 
 from energy_agent.rag.search import Retriever
-from energy_agent.tools.deadlines import Process, calculate_deadline
+from energy_agent.tools.deadlines import RULES, Process, calculate_deadline
 from energy_agent.tools.switch_requests import get_switch_status
 
 
@@ -86,6 +86,14 @@ class GetSwitchStatusArgs(BaseModel):
         return self
 
 
+def _step_catalogue() -> str:
+    """'lieferbeginn: 1 Anmeldung ...; 6 Ablehnung ...' so the model can pick the step number."""
+    lines = {}
+    for rule in RULES:
+        lines.setdefault(rule.process, []).append(f"{rule.step} = {rule.action}")
+    return "\n".join(f"- {process}: {'; '.join(steps)}" for process, steps in lines.items())
+
+
 def build_tools(conn: psycopg.Connection, retriever: Retriever) -> list[Tool]:
     def search_documents(args: SearchDocumentsArgs) -> dict:
         results = retriever.search(args.query, args.k)
@@ -115,7 +123,8 @@ def build_tools(conn: psycopg.Connection, retriever: Retriever) -> list[Tool]:
             "(Werktage, incl. nationwide counting of state holidays, 24.12. and 31.12.). For "
             "step 1 of lieferbeginn/lieferende_lf pass assignment_date to get the latest day "
             "to send, or step1_sent_at to get the earliest possible date. Other steps need "
-            "step1_sent_at. Returns the deadline, an explanation and the source.",
+            "step1_sent_at. Returns the deadline, an explanation and the source.\n"
+            f"Processes and steps:\n{_step_catalogue()}",
             CalculateDeadlineArgs,
             lambda a: calculate_deadline(a.process, a.step, a.step1_sent_at, a.assignment_date),
         ),
