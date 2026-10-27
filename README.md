@@ -17,3 +17,15 @@ cp .env.example .env   # then add your Mistral API key
 uv run energy-agent
 uv run pytest
 ```
+
+## Data
+
+The corpus is the current GPKE as published by the Bundesnetzagentur with decision
+[BK6-22-024](https://www.bundesnetzagentur.de/DE/Beschlusskammern/1_GZ/BK6-GZ/2022/BK6-22-024/BK6-22-024_Verfahren.html)
+(supplier switch within 24 hours, in force since 2025-06-06): the decision itself and
+GPKE parts 1, 2 and 4. The PDFs are not stored in the repo; URLs and SHA-256 checksums are
+pinned in [`data/sources.toml`](data/sources.toml).
+
+```bash
+uv run python scripts/download_sources.py   # downloads to data/raw/ and verifies checksums
+```

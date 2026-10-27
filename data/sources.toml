@@ -1,0 +1,36 @@
+# Public BNetzA documents that make up the RAG corpus.
+# scripts/download_sources.py downloads them to data/raw/ (git-ignored) and verifies sha256.
+# Procedure page (BK6-22-024, LFW24, in force since 2025-06-06):
+# https://www.bundesnetzagentur.de/DE/Beschlusskammern/1_GZ/BK6-GZ/2022/BK6-22-024/BK6-22-024_Verfahren.html
+
+[[documents]]
+id = "bk6-22-024-beschluss"
+title = "BK6-22-024 Beschluss vom 21.03.2024 (Lieferantenwechsel in 24 Stunden)"
+file = "BK6-22-024_Beschluss_vom_21_03_2024.pdf"
+url = "https://www.bundesnetzagentur.de/DE/Beschlusskammern/1_GZ/BK6-GZ/2022/BK6-22-024/Beschluss/BK6-22-024_Beschluss_vom_21_03_2024.pdf?__blob=publicationFile&v=1"
+valid_from = 2025-06-06
+sha256 = "d63ba4ad3907dadd951df8221edb7a15e0c469f03d89bae880fead160ed0cf20"
+
+[[documents]]
+id = "gpke-teil1"
+title = "GPKE Teil 1 – Einführende Prozessbeschreibung (Lesefassung)"
+file = "Anlage1a_GPKE_Teil1_Lesefassung.pdf"
+url = "https://www.bundesnetzagentur.de/DE/Beschlusskammern/1_GZ/BK6-GZ/2022/BK6-22-024/Beschluss/Anlage1a_GPKE_Teil1_Lesefassung.pdf?__blob=publicationFile&v=1"
+valid_from = 2025-06-06
+sha256 = "65db823b533f57631f26c525204ee364995897433faa4de0905bd12967c6997c"
+
+[[documents]]
+id = "gpke-teil2"
+title = "GPKE Teil 2 – Fokus Zuordnungsprozesse"
+file = "Anlage1b_GPKE_Teil2.pdf"
+url = "https://www.bundesnetzagentur.de/DE/Beschlusskammern/1_GZ/BK6-GZ/2022/BK6-22-024/Beschluss/Anlage1b_GPKE_Teil2.pdf?__blob=publicationFile&v=1"
+valid_from = 2025-06-06
+sha256 = "3bc5fd9473639ab3085291aaf730d9287f8479ef3176efc1dbea0bd50b759d0b"
+
+[[documents]]
+id = "gpke-teil4"
+title = "GPKE Teil 4 – Fokus Stammdatenprozesse"
+file = "Anlage1d_GPKE_Teil4.pdf"
+url = "https://www.bundesnetzagentur.de/DE/Beschlusskammern/1_GZ/BK6-GZ/2022/BK6-22-024/Beschluss/Anlage1d_GPKE_Teil4.pdf?__blob=publicationFile&v=3"
+valid_from = 2025-06-06
+sha256 = "587806ee8942bda575f5c8453ce67b4bcbae4d7d507968ab1eb56808587974f7"
