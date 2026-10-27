@@ -1,0 +1,884 @@
+{
+  "meta": {
+    "provider": "ollama",
+    "model": "ministral-3:8b",
+    "guardrail": true,
+    "run_at": "2026-10-27T23:09:12",
+    "commit": "a687961"
+  },
+  "summary": {
+    "cases": 29,
+    "pass_rate": 0.793,
+    "tool_use": 1.0,
+    "deadline_args": 0.931,
+    "answer_correct": 0.793,
+    "faithful": 1.0,
+    "cites_source": 0.9,
+    "grounded": 0.966,
+    "guardrail_fired": 2,
+    "by_category": {
+      "combined": 0.333,
+      "deadline": 0.909,
+      "negative": 1.0,
+      "rag": 0.778,
+      "status": 0.8
+    },
+    "avg_latency_s": 13.8,
+    "avg_llm_calls": 2.24,
+    "tokens": 101899
+  },
+  "cases": [
+    {
+      "id": "lb-ablehnung-weihnachten",
+      "category": "deadline",
+      "passed": true,
+      "tools_ok": true,
+      "args_ok": true,
+      "answer_ok": true,
+      "faithful": true,
+      "cites": true,
+      "grounded": true,
+      "guardrail_retries": 0,
+      "failures": [],
+      "answer": "Der Netzbetreiber muss die Anmeldung zum Lieferbeginn **spätestens am 28.12.2026 um 11:00 Uhr** ablehnen.\n\n**Hinweis:** Die Ablehnung muss unverzüglich, aber spätestens bis zum ersten Übertragungszeitpunkt (ÜZ) nach dem Übertragungszeitpunkt der Anmeldung (23.12.2026, 10:00 Uhr) erfolgen.\n**Quelle:** GPKE Teil 2 (Anlage 1b zu BK6-22-024), 2.1.2 SD: Lieferbeginn, Nr. 6, S. 21.",
+      "tool_calls": [
+        {
+          "name": "calculate_deadline",
+          "arguments": {
+            "process": "lieferbeginn",
+            "step": 6,
+            "step1_sent_at": "2026-12-23T10:00:00"
+          }
+        }
+      ],
+      "llm_calls": 2,
+      "latency_ms": 21016,
+      "prompt_tokens": 2769,
+      "completion_tokens": 211
+    },
+    {
+      "id": "lb-fruehester-beginn-pfingsten",
+      "category": "deadline",
+      "passed": false,
+      "tools_ok": true,
+      "args_ok": false,
+      "answer_ok": false,
+      "faithful": true,
+      "cites": false,
+      "grounded": true,
+      "guardrail_retries": 0,
+      "failures": [
+        "wrong deadline args [{'process': 'lieferbeginn', 'step': 5, 'step1_sent_at': '2025-06-06T00:00:00'}], expected process='lieferbeginn' step=[1]",
+        "date 11.06.2025 missing"
+      ],
+      "answer": "Der Lieferant kann **frühestens am Dienstag, 10. Juni 2025, um 11:00 Uhr** beliefern, da die Zuordnung der Marktlokation spätestens bis zu diesem Zeitpunkt durch den Netzbetreiber bestätigt werden muss.\n\n**Hinweis:** Die Bestätigung muss unverzüglich, aber spätestens bis 11:00 Uhr am ersten Werktag nach der Anmeldung (Freitag, 6. Juni 2025) erfolgen.",
+      "tool_calls": [
+        {
+          "name": "calculate_deadline",
+          "arguments": {
+            "process": "lieferbeginn",
+            "step": 5,
+            "step1_sent_at": "2025-06-06T00:00:00"
+          }
+        }
+      ],
+      "llm_calls": 2,
+      "latency_ms": 10782,
+      "prompt_tokens": 2699,
+      "completion_tokens": 166
+    },
+    {
+      "id": "lb-fruehester-beginn-montag",
+      "category": "deadline",
+      "passed": true,
+      "tools_ok": true,
+      "args_ok": true,
+      "answer_ok": true,
+      "faithful": true,
+      "cites": true,
+      "grounded": true,
+      "guardrail_retries": 0,
+      "failures": [],
+      "answer": "Der früheste mögliche Lieferbeginn ist **Mittwoch, 28.10.2026, 00:00 Uhr**.\n\n**Hinweis:** Bei EEG-Marktlokationen gilt eine andere Regelung (spätester ÜT ist der letzte WT vor dem Zuordnungsbeginn). Die Regel bezieht sich auf Nicht-EEG-Marktlokationen.\n\n**Quelle:** GPKE Teil 2 (Anlage 1b zu BK6-22-024), 2.1.2 SD: Lieferbeginn, Nr. 1, S. 17.",
+      "tool_calls": [
+        {
+          "name": "calculate_deadline",
+          "arguments": {
+            "process": "lieferbeginn",
+            "step": 1,
+            "step1_sent_at": "2026-10-26T00:00:00"
+          }
+        }
+      ],
+      "llm_calls": 2,
+      "latency_ms": 12233,
+      "prompt_tokens": 2651,
+      "completion_tokens": 185
+    },
+    {
+      "id": "lb-spaetester-anmeldetag",
+      "category": "deadline",
+      "passed": true,
+      "tools_ok": true,
+      "args_ok": true,
+      "answer_ok": true,
+      "faithful": true,
+      "cites": true,
+      "grounded": true,
+      "guardrail_retries": 0,
+      "failures": [],
+      "answer": "Die Anmeldung muss **spätestens am 29.10.2026** (Donnerstag) an den Netzbetreiber übermittelt werden.\n**Quelle:** GPKE Teil 2 (Anlage 1b zu BK6-22-024), 2.1.2 SD: Lieferbeginn, Nr. 1, S. 17.",
+      "tool_calls": [
+        {
+          "name": "calculate_deadline",
+          "arguments": {
+            "process": "lieferbeginn",
+            "step": 1,
+            "assignment_date": "2026-11-02"
+          }
+        }
+      ],
+      "llm_calls": 2,
+      "latency_ms": 8653,
+      "prompt_tokens": 2641,
+      "completion_tokens": 129
+    },
+    {
+      "id": "malo-anfrage-nacht",
+      "category": "deadline",
+      "passed": true,
+      "tools_ok": true,
+      "args_ok": true,
+      "answer_ok": true,
+      "faithful": true,
+      "cites": true,
+      "grounded": true,
+      "guardrail_retries": 0,
+      "failures": [],
+      "answer": "Der Netzbetreiber muss **unverzüglich**, spätestens jedoch bis **31.10.2026, 01:30 Uhr** antworten.\n**Quelle:** GPKE Teil 2 (Anlage 1b zu BK6-22-024), 1.1.2 SD: Ermittlung der MaLo-ID, Nr. 2, S. 6.",
+      "tool_calls": [
+        {
+          "name": "calculate_deadline",
+          "arguments": {
+            "process": "malo_ermittlung",
+            "step": 2,
+            "step1_sent_at": "2026-10-30T23:30"
+          }
+        }
+      ],
+      "llm_calls": 2,
+      "latency_ms": 9261,
+      "prompt_tokens": 2634,
+      "completion_tokens": 141
+    },
+    {
+      "id": "kuendigung-antwort",
+      "category": "deadline",
+      "passed": true,
+      "tools_ok": true,
+      "args_ok": true,
+      "answer_ok": true,
+      "faithful": true,
+      "cites": true,
+      "grounded": true,
+      "guardrail_retries": 0,
+      "failures": [],
+      "answer": "Der bisherige Lieferant muss **spätestens am Montag, 02.11.2026** antworten.\n\n**Grundlage:**\nGPKE Teil 2 (Anlage 1b zu BK6-22-024), 1.2.2 SD: Kündigung, Nr. 2, S. 9.",
+      "tool_calls": [
+        {
+          "name": "calculate_deadline",
+          "arguments": {
+            "process": "kuendigung",
+            "step": 2,
+            "step1_sent_at": "2026-10-30"
+          }
+        }
+      ],
+      "llm_calls": 2,
+      "latency_ms": 8238,
+      "prompt_tokens": 2654,
+      "completion_tokens": 120
+    },
+    {
+      "id": "abmeldung-spaetester-tag",
+      "category": "deadline",
+      "passed": true,
+      "tools_ok": true,
+      "args_ok": true,
+      "answer_ok": true,
+      "faithful": true,
+      "cites": true,
+      "grounded": true,
+      "guardrail_retries": 0,
+      "failures": [],
+      "answer": "Die Abmeldung muss **spätestens am 29.11.2026** übermittelt werden.\n**Quelle:** GPKE Teil 2 (Anlage 1b zu BK6-22-024), 2.5.1.2 SD: Lieferende von LF an NB, Nr. 1, S. 53.",
+      "tool_calls": [
+        {
+          "name": "calculate_deadline",
+          "arguments": {
+            "process": "lieferende_lf",
+            "step": 1,
+            "assignment_date": "2026-12-01"
+          }
+        }
+      ],
+      "llm_calls": 2,
+      "latency_ms": 8705,
+      "prompt_tokens": 2679,
+      "completion_tokens": 124
+    },
+    {
+      "id": "abmeldung-bestaetigung-jahreswechsel",
+      "category": "deadline",
+      "passed": true,
+      "tools_ok": true,
+      "args_ok": true,
+      "answer_ok": true,
+      "faithful": true,
+      "cites": true,
+      "grounded": true,
+      "guardrail_retries": 0,
+      "failures": [],
+      "answer": "Der Netzbetreiber muss die Beendigung der Zuordnung **spätestens am 04.01.2027 um 06:00 Uhr** bestätigen.\n\n**Grundlage:**\nGPKE Teil 2 (Anlage 1b zu BK6-22-024), 2.5.1.2 SD: Lieferende von LF an NB, Nr. 2, S. 53.",
+      "tool_calls": [
+        {
+          "name": "calculate_deadline",
+          "arguments": {
+            "process": "lieferende_lf",
+            "step": 2,
+            "step1_sent_at": "2026-12-30T14:00:00"
+          }
+        }
+      ],
+      "llm_calls": 2,
+      "latency_ms": 10328,
+      "prompt_tokens": 2767,
+      "completion_tokens": 148
+    },
+    {
+      "id": "lieferende-nb-fenster-busstag",
+      "category": "deadline",
+      "passed": true,
+      "tools_ok": true,
+      "args_ok": true,
+      "answer_ok": true,
+      "faithful": true,
+      "cites": true,
+      "grounded": true,
+      "guardrail_retries": 0,
+      "failures": [],
+      "answer": "Der Netzbetreiber muss die Beendigung der Zuordnung **unverzüglich**, jedoch **zwischen 05:00 Uhr und 06:00 Uhr am 19.11.2026** (Donnerstag) übermitteln.\n\n**Quelle:** GPKE Teil 2 (Anlage 1b zu BK6-22-024), 2.5.2.2 SD: *Lieferende von NB an LF*, Nr. 3, S. 58.",
+      "tool_calls": [
+        {
+          "name": "calculate_deadline",
+          "arguments": {
+            "process": "lieferende_nb",
+            "step": 3,
+            "step1_sent_at": "2026-11-17T00:00"
+          }
+        }
+      ],
+      "llm_calls": 2,
+      "latency_ms": 11641,
+      "prompt_tokens": 2765,
+      "completion_tokens": 162
+    },
+    {
+      "id": "ev-antwort-gleicher-tag",
+      "category": "deadline",
+      "passed": true,
+      "tools_ok": true,
+      "args_ok": true,
+      "answer_ok": true,
+      "faithful": true,
+      "cites": true,
+      "grounded": true,
+      "guardrail_retries": 1,
+      "failures": [],
+      "answer": "Der Ersatzversorger muss auf die Ankündigung der Zuordnung durch den Netzbetreiber **innerhalb von 1 Werktag** antworten, wobei die Frist spätestens **15:00 Uhr am Übertragungszeitpunkt (ÜT) des Ankündigungstags** endet.\n\n*(Quelle: GPKE Teil 2, Abschnitt 2.3.2.2, S. 34, Schritt 2)*\n\nDa der Zuordnungsbeginn am **15.10.2026** liegt (also in der Zukunft), gilt die Frist **I.** aus der Tabelle. Die Antwortfrist endet somit **spätestens am 14.10.2026 um 15:00 Uhr**.\n\nDa die Ankündigung aber erst **14.10.2026 um 11:00 Uhr** erfolgte, ist der **späteste Übertragungszeitpunkt für die Antwort der Ersatzversorger der 14.10.2026 um 15:00 Uhr**.",
+      "tool_calls": [
+        {
+          "name": "calculate_deadline",
+          "arguments": {
+            "process": "ersatzversorgung_beginn",
+            "step": 2,
+            "step1_sent_at": "2026-10-14T11:00:00"
+          }
+        },
+        {
+          "name": "calculate_deadline",
+          "arguments": {
+            "process": "ersatzversorgung_beginn",
+            "step": 2,
+            "assignment_date": "2026-10-15"
+          }
+        },
+        {
+          "name": "search_documents",
+          "arguments": {
+            "query": "Frist Ersatzversorger Antwort auf Ankündigung Zuordnung Ersatzversorgung"
+          }
+        }
+      ],
+      "llm_calls": 5,
+      "latency_ms": 39793,
+      "prompt_tokens": 9238,
+      "completion_tokens": 450
+    },
+    {
+      "id": "lb-bestaetigung-fronleichnam",
+      "category": "deadline",
+      "passed": true,
+      "tools_ok": true,
+      "args_ok": true,
+      "answer_ok": true,
+      "faithful": true,
+      "cites": true,
+      "grounded": true,
+      "guardrail_retries": 0,
+      "failures": [],
+      "answer": "Der Netzbetreiber muss die Zuordnung des neuen Lieferanten **spätestens am Freitag, 05.06.2026 um 11:00 Uhr** bestätigen.\n\n**Hinweis:** Der 04.06.2026 (Donnerstag) wurde als gesetzlicher Feiertag (Fronleichnam) in den Bundesländern Baden-Württemberg, Bayern, Hessen, Nordrhein-Westfalen, Rheinland-Pfalz und Saarland nicht als Werktag gezählt.\n\n**Quelle:** GPKE Teil 2 (Anlage 1b zu BK6-22-024), 2.1.2 SD: Lieferbeginn, Nr. 5, S. 20-21.",
+      "tool_calls": [
+        {
+          "name": "calculate_deadline",
+          "arguments": {
+            "process": "lieferbeginn",
+            "step": 5,
+            "step1_sent_at": "2026-06-03"
+          }
+        }
+      ],
+      "llm_calls": 2,
+      "latency_ms": 13473,
+      "prompt_tokens": 2707,
+      "completion_tokens": 206
+    },
+    {
+      "id": "status-abgelehnt-grund",
+      "category": "status",
+      "passed": true,
+      "tools_ok": true,
+      "args_ok": true,
+      "answer_ok": true,
+      "faithful": true,
+      "cites": null,
+      "grounded": true,
+      "guardrail_retries": 0,
+      "failures": [],
+      "answer": "Die Wechselanfrage **LW-2026-0002** wurde **abgelehnt**.\n\n**Grund**: Die Marktlokation mit der ID **59876543215** konnte nicht eindeutig identifiziert werden (Quelle: GPKE-Datenbank, Statusmeldung).\n\nDie Ablehnung erfolgte durch den Netzbetreiber **Testnetz Rhein GmbH** am **2026-10-23**. Der Wechsel kann erst nach Klärung der Marktlokationsdaten neu eingereicht werden.",
+      "tool_calls": [
+        {
+          "name": "get_switch_status",
+          "arguments": {
+            "request_id": "LW-2026-0002"
+          }
+        }
+      ],
+      "llm_calls": 2,
+      "latency_ms": 10076,
+      "prompt_tokens": 2568,
+      "completion_tokens": 147
+    },
+    {
+      "id": "status-per-malo",
+      "category": "status",
+      "passed": true,
+      "tools_ok": true,
+      "args_ok": true,
+      "answer_ok": true,
+      "faithful": true,
+      "cites": null,
+      "grounded": true,
+      "guardrail_retries": 0,
+      "failures": [],
+      "answer": "Für die **Marktlokation 53101010105** liegt eine Wechselanfrage (Lieferbeginn) vor:\n\n- **Anfrage-ID:** LW-2026-0006\n- **Status:** **Abgelehnt**\n- **Grund:** Der Lieferungsfernmeldeanschluss (LFA) hat Widerspruch eingelegt, da ein Vertrag mit Mindestlaufzeit bis **31.12.2026** besteht.\n- **Neuer Lieferant:** Nordwind Strom GmbH\n- **Alter Lieferant:** Sonnental Energie AG\n- **Geplanter Lieferbeginn:** 23.10.2026\n\nDie Ablehnung erfolgte durch den Netzbetreiber (Testnetz Rhein GmbH) am **22.10.2026**.",
+      "tool_calls": [
+        {
+          "name": "get_switch_status",
+          "arguments": {
+            "malo_id": "53101010105"
+          }
+        }
+      ],
+      "llm_calls": 2,
+      "latency_ms": 15169,
+      "prompt_tokens": 2604,
+      "completion_tokens": 216
+    },
+    {
+      "id": "status-ersatzversorgung",
+      "category": "status",
+      "passed": true,
+      "tools_ok": true,
+      "args_ok": true,
+      "answer_ok": true,
+      "faithful": true,
+      "cites": null,
+      "grounded": true,
+      "guardrail_retries": 0,
+      "failures": [],
+      "answer": "Die Marktlokation mit der MaLo-ID **52468135797** (Anfrage **EV-2026-0005**) wird seit dem **15. Oktober 2026** durch **Beispiel Stadtwerke AG** beliefert.\n\n*Hinweis:* Es handelt sich um eine Ersatzversorgung, da kein Nachfolgelieferant benannt wurde. Quelle: Status der Ersatzversorgung (Beginn).",
+      "tool_calls": [
+        {
+          "name": "get_switch_status",
+          "arguments": {
+            "request_id": "EV-2026-0005"
+          }
+        }
+      ],
+      "llm_calls": 2,
+      "latency_ms": 8725,
+      "prompt_tokens": 2597,
+      "completion_tokens": 124
+    },
+    {
+      "id": "status-unbekannt",
+      "category": "status",
+      "passed": true,
+      "tools_ok": true,
+      "args_ok": true,
+      "answer_ok": true,
+      "faithful": true,
+      "cites": null,
+      "grounded": true,
+      "guardrail_retries": 0,
+      "failures": [],
+      "answer": "Es gibt keine Wechselanfrage mit der ID **LW-2026-0999** in der Datenbank. Bitte prüfen Sie die Schreibweise oder geben Sie eine andere ID an.",
+      "tool_calls": [
+        {
+          "name": "get_switch_status",
+          "arguments": {
+            "request_id": "LW-2026-0999"
+          }
+        }
+      ],
+      "llm_calls": 2,
+      "latency_ms": 4868,
+      "prompt_tokens": 2371,
+      "completion_tokens": 71
+    },
+    {
+      "id": "malo-ungueltig",
+      "category": "status",
+      "passed": false,
+      "tools_ok": true,
+      "args_ok": true,
+      "answer_ok": false,
+      "faithful": true,
+      "cites": null,
+      "grounded": false,
+      "guardrail_retries": 1,
+      "failures": [
+        "none of ['ungültig', 'Prüfziffer', 'nicht gültig', 'keine gültige', 'fehlerhaft'] in answer"
+      ],
+      "answer": "Verstanden! Ich werde **ausschließlich** die Tools verwenden und keine Antworten aus dem Gedächtnis geben. Bitte geben Sie mir die konkrete Frage oder den Auftrag erneut, damit ich die passenden Tools anwende.",
+      "tool_calls": [
+        {
+          "name": "get_switch_status",
+          "arguments": {
+            "malo_id": "51234567890"
+          }
+        }
+      ],
+      "llm_calls": 3,
+      "latency_ms": 14786,
+      "prompt_tokens": 3758,
+      "completion_tokens": 171
+    },
+    {
+      "id": "kombi-status-frist-0003",
+      "category": "combined",
+      "passed": false,
+      "tools_ok": true,
+      "args_ok": false,
+      "answer_ok": false,
+      "faithful": true,
+      "cites": null,
+      "grounded": true,
+      "guardrail_retries": 0,
+      "failures": [
+        "wrong deadline args [{'process': 'lieferbeginn', 'step': 2, 'step1_sent_at': '2026-10-26T17:20'}], expected process='lieferbeginn' step=[5, 6]",
+        "time 11:00 missing",
+        "none of ['angemeldet'] in answer"
+      ],
+      "answer": "**Status der Wechselanfrage LW-2026-0003:**\nDie Anmeldung ist bei der Netzbetreiberin (Testnetz Rhein GmbH) eingegangen und befindet sich in Schritt 1. Der Netzbetreiber hat noch nicht geantwortet (Stand: 2026-10-27).\n\n**Frist für die Antwort des Netzbetreibers:**\nDer Netzbetreiber muss **spätestens bis zum 27.10.2026, 07:00 Uhr** (Übertragungszeitpunkt) die Information über eine ggf. bereits bestehende Zuordnung an den Lieferanten zurückmelden.\n*(Quelle: GPKE Teil 2, Anlage 1b zu BK6-22-024, Nr. 2, S. 19)*",
+      "tool_calls": [
+        {
+          "name": "get_switch_status",
+          "arguments": {
+            "request_id": "LW-2026-0003"
+          }
+        },
+        {
+          "name": "search_documents",
+          "arguments": {
+            "query": "Frist Antwort Netzbetreiber Lieferbeginn Anmeldung",
+            "k": 1
+          }
+        },
+        {
+          "name": "calculate_deadline",
+          "arguments": {
+            "process": "lieferbeginn",
+            "step": 2,
+            "step1_sent_at": "2026-10-26T17:20"
+          }
+        },
+        {
+          "name": "search_documents",
+          "arguments": {
+            "k": 1,
+            "query": "Frist Antwort Netzbetreiber Lieferbeginn Schritt 2"
+          }
+        }
+      ],
+      "llm_calls": 3,
+      "latency_ms": 25267,
+      "prompt_tokens": 5944,
+      "completion_tokens": 309
+    },
+    {
+      "id": "kombi-bestaetigung-0007",
+      "category": "combined",
+      "passed": true,
+      "tools_ok": true,
+      "args_ok": true,
+      "answer_ok": true,
+      "faithful": true,
+      "cites": null,
+      "grounded": true,
+      "guardrail_retries": 0,
+      "failures": [],
+      "answer": "Der Netzbetreiber muss die Anmeldung **LW-2026-0007** bis **spätestens 11:00 Uhr am 28. Oktober 2026** bestätigen oder ablehnen.\n\n**Hinweis:** Die Frist gilt für eine Ablehnung. Eine Bestätigung sollte unverzüglich erfolgen, spätestens jedoch bis zum genannten Zeitpunkt.\n\n**Quelle:** GPKE Teil 2 (Anlage 1b zu BK6-22-024), 2.1.2 SD: Lieferbeginn, Nr. 6, S. 21.",
+      "tool_calls": [
+        {
+          "name": "get_switch_status",
+          "arguments": {
+            "request_id": "LW-2026-0007"
+          }
+        },
+        {
+          "name": "calculate_deadline",
+          "arguments": {
+            "process": "lieferbeginn",
+            "step": 6,
+            "step1_sent_at": "2026-10-27T08:15:00"
+          }
+        }
+      ],
+      "llm_calls": 3,
+      "latency_ms": 14324,
+      "prompt_tokens": 4265,
+      "completion_tokens": 209
+    },
+    {
+      "id": "kombi-fristgerecht-0007",
+      "category": "combined",
+      "passed": false,
+      "tools_ok": true,
+      "args_ok": true,
+      "answer_ok": false,
+      "faithful": true,
+      "cites": null,
+      "grounded": true,
+      "guardrail_retries": 0,
+      "failures": [
+        "forbidden 'nicht fristgerecht' in answer",
+        "forbidden 'verspätet' in answer"
+      ],
+      "answer": "Die Anmeldung **LW-2026-0007** wurde **nicht fristgerecht** gesendet.\n**Fristende für Schritt 1 (Anmeldung)** war der **27.10.2026** (ÜT), da der früheste mögliche Lieferbeginn **29.10.2026** ist.\nDie Anmeldung erfolgte zwar am **27.10.2026**, aber die **Übertragungszeit (ÜT)** für den letzten Werktag vor dem Lieferbeginn ist bereits **abgelaufen** (vgl. [GPKE Teil 2, Anlage 1b zu BK6-22-024, 2.1.2 SD, Nr. 1, S. 17](https://...)).\n\n**Hinweis:** Die Anmeldung wurde erst nach Ablauf der ÜT übermittelt. Der Netzbetreiber (NB) kann die Anmeldung daher als verspätet ablehnen.",
+      "tool_calls": [
+        {
+          "name": "get_switch_status",
+          "arguments": {
+            "request_id": "LW-2026-0007"
+          }
+        },
+        {
+          "name": "calculate_deadline",
+          "arguments": {
+            "process": "lieferbeginn",
+            "step": 1,
+            "step1_sent_at": "2026-10-27T08:15:00"
+          }
+        }
+      ],
+      "llm_calls": 3,
+      "latency_ms": 24224,
+      "prompt_tokens": 4355,
+      "completion_tokens": 362
+    },
+    {
+      "id": "rag-ohne-vertrag",
+      "category": "rag",
+      "passed": true,
+      "tools_ok": true,
+      "args_ok": true,
+      "answer_ok": true,
+      "faithful": true,
+      "cites": false,
+      "grounded": true,
+      "guardrail_retries": 0,
+      "failures": [],
+      "answer": "Wenn ein Letztverbraucher Strom entnimmt, ohne dass ein Liefervertrag besteht, wird er **automatisch mit einem Ersatzversorger (Ersatzlieferant)** beliefert. Dies regelt die **GPKE** in den Vorgaben zur Ersatzversorgung.\n\n**Relevanter Passus:**\nDie Ersatzversorgung tritt ein, wenn kein gültiger Liefervertrag vorliegt und Strom entnommen wird. Der konkrete Ersatzversorger wird über die Marktkommunikation zugewiesen (vgl. GPKE-Anlagen zur Ersatzversorgung).\n\nFalls du den genauen Ersatzversorger oder die rechtlichen Grundlagen zur Ersatzversorgung wissen möchtest, kann ich die GPKE-Anlagen oder die BNetzA-Bestimmungen dazu durchsuchen. Möchtest du das?",
+      "tool_calls": [
+        {
+          "name": "search_documents",
+          "arguments": {
+            "query": "Ersatzversorgung Stromentnahme ohne Liefervertrag",
+            "k": 1
+          }
+        }
+      ],
+      "llm_calls": 2,
+      "latency_ms": 14288,
+      "prompt_tokens": 2826,
+      "completion_tokens": 197
+    },
+    {
+      "id": "rag-ev-nach-drei-monaten",
+      "category": "rag",
+      "passed": true,
+      "tools_ok": true,
+      "args_ok": true,
+      "answer_ok": true,
+      "faithful": true,
+      "cites": true,
+      "grounded": true,
+      "guardrail_retries": 0,
+      "failures": [],
+      "answer": "Ein Kunde, der seit **drei Monaten** in der Ersatzversorgung ist, wechselt **automatisch in die Grundversorgung**, sofern der Ersatzversorger (E/G) zu diesem Zeitpunkt noch mit der Marktlokation zugeordnet ist.\n\nDies regelt **GPKE Teil 2, Abschnitt 2.3.2.1 (S. 32–33)** explizit:\n> *„Der Wechsel von der Ersatzversorgung in die Grundversorgung findet nach drei Monaten automatisch statt, sofern der E/G zu diesem Zeitpunkt der Marktlokation noch zugeordnet ist.“*\n\nEine aktive Kündigung oder weitere Kommunikation ist hierfür nicht erforderlich. Die Angabe, ob sich der Kunde in Ersatz- oder Grundversorgung befindet, ist zudem **keine stammdatenänderungsrelevante Angabe** – es erfolgt also keine zusätzliche Meldung an den Netzbetreiber (NB). Der E/G kann das Verhältnis jedoch jederzeit über den Use-Case *„Lieferende von LF an NB“* beenden.",
+      "tool_calls": [
+        {
+          "name": "search_documents",
+          "arguments": {
+            "query": "Ersatzversorgung Dauer drei Monate Regelwerk"
+          }
+        }
+      ],
+      "llm_calls": 2,
+      "latency_ms": 23215,
+      "prompt_tokens": 4546,
+      "completion_tokens": 240
+    },
+    {
+      "id": "rag-ev-kuendigung",
+      "category": "rag",
+      "passed": true,
+      "tools_ok": true,
+      "args_ok": true,
+      "answer_ok": true,
+      "faithful": true,
+      "cites": true,
+      "grounded": true,
+      "guardrail_retries": 0,
+      "failures": [],
+      "answer": "Nein, ein neuer Lieferant muss **keine Kündigung** des bisherigen Lieferanten (LFA) schicken, wenn der Kunde bereits in der **Ersatzversorgung** ist.\nLaut GPKE (Teil 2, S. 8) handelt es sich bei der Ersatzversorgung um **kein kündigungspflichtiges Vertragsverhältnis**, sodass keine Kündigung erforderlich ist.\n\nFalls der neue Lieferant trotzdem eine Kündigung übermittelt, stimmt der Ersatzversorger (E/G) dieser zu, sofern keine Ablehnungsgründe vorliegen.",
+      "tool_calls": [
+        {
+          "name": "search_documents",
+          "arguments": {
+            "query": "Kündigung Ersatzversorgung Pflicht",
+            "k": 1
+          }
+        }
+      ],
+      "llm_calls": 2,
+      "latency_ms": 11344,
+      "prompt_tokens": 2812,
+      "completion_tokens": 154
+    },
+    {
+      "id": "rag-schriftform",
+      "category": "rag",
+      "passed": true,
+      "tools_ok": true,
+      "args_ok": true,
+      "answer_ok": true,
+      "faithful": true,
+      "cites": true,
+      "grounded": true,
+      "guardrail_retries": 0,
+      "failures": [],
+      "answer": "Nein, der bisherige Lieferant (**LFA**) darf die Kündigung nicht **nur** wegen fehlender **Schriftform** ablehnen.\nDie GPKE sieht vor, dass der LFA die Kündigung **bestätigt** oder **mit Gründen ablehnt**, wenn er sie ablehnt. Eine bloße Nichtbeachtung der vertraglich vereinbarten Schriftform allein ist **kein ausreichender Ablehnungsgrund**.\n\n**Quelle:**\nGPKE Teil 2 – Fokus Zuordnungsprozesse, 1.2.2 SD: Kündigung, S. 10.\n*(Hinweis: Der LFA muss bei Ablehnung konkrete Gründe nennen.)*",
+      "tool_calls": [
+        {
+          "name": "search_documents",
+          "arguments": {
+            "query": "Kündigung Schriftform Ablehnung",
+            "k": 1
+          }
+        }
+      ],
+      "llm_calls": 2,
+      "latency_ms": 12346,
+      "prompt_tokens": 2787,
+      "completion_tokens": 173
+    },
+    {
+      "id": "rag-zuordnungsbeginn-uhrzeit",
+      "category": "rag",
+      "passed": false,
+      "tools_ok": true,
+      "args_ok": true,
+      "answer_ok": false,
+      "faithful": true,
+      "cites": true,
+      "grounded": true,
+      "guardrail_retries": 0,
+      "failures": [
+        "time 00:00 missing"
+      ],
+      "answer": "Laut GPKE beginnt eine Zuordnung (Zuordnungsbeginn) **spätestens um 16:00 Uhr** des ersten Werktags nach der Übermittlung der Anmeldung (Prozessschritt 1) oder, falls der Zuordnungsbeginn in der Zukunft liegt, **zwischen 15:00 Uhr und 16:00 Uhr am Übertragungsdatum (ÜT) von Schritt 1**.\n\n*(Quelle: GPKE Teil 2, S. 45–46, Abschnitt 2.4.2.4, Fall 3)*",
+      "tool_calls": [
+        {
+          "name": "search_documents",
+          "arguments": {
+            "query": "Zuordnungsbeginn Uhrzeit GPKE",
+            "k": 1
+          }
+        }
+      ],
+      "llm_calls": 2,
+      "latency_ms": 11796,
+      "prompt_tokens": 2993,
+      "completion_tokens": 158
+    },
+    {
+      "id": "rag-werktag",
+      "category": "rag",
+      "passed": false,
+      "tools_ok": true,
+      "args_ok": true,
+      "answer_ok": false,
+      "faithful": true,
+      "cites": true,
+      "grounded": true,
+      "guardrail_retries": 0,
+      "failures": [
+        "none of ['24.12', '24. Dezember', 'Heiligabend'] in answer"
+      ],
+      "answer": "Die GPKE definiert einen **Werktag** als jeden Tag, der **kein Samstag, Sonntag oder gesetzlicher Feiertag** ist.\n*(Quelle: BK6-22-024, B. V. 2.5. Fristen, S. 20)*",
+      "tool_calls": [
+        {
+          "name": "search_documents",
+          "arguments": {
+            "query": "Werktag Definition GPKE",
+            "k": 1
+          }
+        }
+      ],
+      "llm_calls": 2,
+      "latency_ms": 7654,
+      "prompt_tokens": 2852,
+      "completion_tokens": 88
+    },
+    {
+      "id": "rag-anmeldung-identifikation",
+      "category": "rag",
+      "passed": true,
+      "tools_ok": true,
+      "args_ok": true,
+      "answer_ok": true,
+      "faithful": true,
+      "cites": true,
+      "grounded": true,
+      "guardrail_retries": 0,
+      "failures": [],
+      "answer": "Der neue Lieferant muss die **MaLo-ID** (Marktlokations-ID) verwenden, um eine verbrauchende Marktlokation in der Anmeldung (Schritt 1 des Lieferbeginn-Prozesses) zu identifizieren.\n\n**Quelle:** GPKE Teil 2, 2.1.2 SD: Lieferbeginn, S. 17.",
+      "tool_calls": [
+        {
+          "name": "search_documents",
+          "arguments": {
+            "query": "Kennung verbrauchende Marktlokation Anmeldung Lieferbeginn",
+            "k": 1
+          }
+        }
+      ],
+      "llm_calls": 2,
+      "latency_ms": 8862,
+      "prompt_tokens": 2821,
+      "completion_tokens": 119
+    },
+    {
+      "id": "rag-ev-keine-antwort",
+      "category": "rag",
+      "passed": true,
+      "tools_ok": true,
+      "args_ok": true,
+      "answer_ok": true,
+      "faithful": true,
+      "cites": true,
+      "grounded": true,
+      "guardrail_retries": 0,
+      "failures": [],
+      "answer": "Wenn der Ersatzversorger (E/G) auf die Ankündigung seiner Zuordnung zur Marktlokation nicht fristgerecht antwortet, ordnet der Netzbetreiber (NB) den Ersatzversorger **unverzüglich zum Zuordnungsbeginn** der Marktlokation zu.\n\nDies ist in **BK6-22-024 (BNetzA-Beschluss, S. 32)** und **GPKE Teil 2 (S. 34–35)** explizit geregelt, um Zuordnungslücken zu vermeiden.\n\nDer NB kann nicht länger warten und muss die Zuordnung selbst vornehmen. Der Ersatzversorger erhält anschließend die notwendigen Daten (z. B. Berechnungsformel, Bilanzkreisinformationen) zur weiteren Abwicklung.",
+      "tool_calls": [
+        {
+          "name": "search_documents",
+          "arguments": {
+            "query": "Antwort Ersatzversorger Zuordnung fristgerecht nicht"
+          }
+        }
+      ],
+      "llm_calls": 2,
+      "latency_ms": 20826,
+      "prompt_tokens": 4841,
+      "completion_tokens": 200
+    },
+    {
+      "id": "rag-enwg-24h",
+      "category": "rag",
+      "passed": true,
+      "tools_ok": true,
+      "args_ok": true,
+      "answer_ok": true,
+      "faithful": true,
+      "cites": true,
+      "grounded": true,
+      "guardrail_retries": 0,
+      "failures": [],
+      "answer": "Der technische Stromlieferantenwechsel nach dem **EnWG muss ab dem 1. Januar 2026** an jedem Werktag **innerhalb von 24 Stunden** möglich sein.\n\n**Quelle:** BK6-22-024, Beschluss vom 21.03.2024, B. V. 2.5. Fristen (GPKE1/7.), S. 18.",
+      "tool_calls": [
+        {
+          "name": "search_documents",
+          "arguments": {
+            "query": "24 Stunden Wechsel EnWG Frist",
+            "k": 1
+          }
+        }
+      ],
+      "llm_calls": 2,
+      "latency_ms": 8978,
+      "prompt_tokens": 2699,
+      "completion_tokens": 122
+    },
+    {
+      "id": "ausserhalb-preis",
+      "category": "negative",
+      "passed": true,
+      "tools_ok": true,
+      "args_ok": true,
+      "answer_ok": true,
+      "faithful": true,
+      "cites": null,
+      "grounded": true,
+      "guardrail_retries": 0,
+      "failures": [],
+      "answer": "In den verfügbaren Dokumenten wird **kein konkreter Arbeitspreis** für die Grundversorgung der **Beispiel Stadtwerke AG** genannt.\n\nFalls Sie den genauen Arbeitspreis benötigen, müssen Sie sich an die **Stadtwerke AG selbst** oder deren Tarifinformationen wenden. Die GPKE beschreibt nur die Prozesse, nicht die Preise.\n\nMöchten Sie stattdessen Informationen zu den **prozessualen Abläufen** der Grundversorgung oder Ersatzversorgung?",
+      "tool_calls": [
+        {
+          "name": "search_documents",
+          "arguments": {
+            "query": "Arbeitspreis Grundversorgung Beispiel Stadtwerke AG",
+            "k": 1
+          }
+        }
+      ],
+      "llm_calls": 2,
+      "latency_ms": 9847,
+      "prompt_tokens": 2821,
+      "completion_tokens": 133
+    }
+  ]
+}

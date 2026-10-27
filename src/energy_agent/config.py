@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     mistral_model: str = "ministral-8b-latest"
 
     ollama_host: str = "http://localhost:11434"
-    ollama_model: str = "qwen3:8b"
+    ollama_model: str = "ministral-3:8b"
 
     # Embeddings always run locally, independent of the chat provider.
     embedding_model: str = "bge-m3"
