@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+dist/
+
+# Secrets
+.env
+
+# Downloaded source documents and generated data (re-created by scripts)
+data/raw/
+data/processed/
+
+# Agent traces
+logs/
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/
