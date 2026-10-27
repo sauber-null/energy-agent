@@ -15,7 +15,7 @@ class Settings(BaseSettings):
 
     # SecretStr keeps the key out of repr() and therefore out of logs and traces.
     mistral_api_key: SecretStr | None = None
-    mistral_model: str = "mistral-small-latest"
+    mistral_model: str = "ministral-8b-latest"
 
     ollama_host: str = "http://localhost:11434"
     ollama_model: str = "qwen3:8b"
