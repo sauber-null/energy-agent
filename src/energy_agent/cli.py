@@ -60,6 +60,30 @@ def cmd_search(args: argparse.Namespace) -> None:
         print("    " + r.content[:300].replace("\n", "\n    "))
 
 
+def cmd_seed(args: argparse.Namespace) -> None:
+    from energy_agent.rag.store import connect
+    from energy_agent.tools.switch_requests import seed
+
+    with connect(get_settings().database_url) as conn:
+        print(f"{seed(conn)} switch requests in the test database")
+
+
+def cmd_tool(args: argparse.Namespace) -> None:
+    from energy_agent.rag.embeddings import OllamaEmbedder
+    from energy_agent.rag.search import Retriever
+    from energy_agent.rag.store import connect
+    from energy_agent.tools.registry import build_tools
+
+    settings = get_settings()
+    embedder = OllamaEmbedder(settings.ollama_host, settings.embedding_model)
+    with connect(settings.database_url) as conn:
+        tools = {t.name: t for t in build_tools(conn, Retriever(conn, embedder))}
+        if args.name not in tools:
+            raise SystemExit(f"unknown tool {args.name!r}, available: {', '.join(tools)}")
+        result = tools[args.name].run(args.arguments)
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(prog="energy-agent")
     commands = parser.add_subparsers(required=True)
@@ -81,6 +105,15 @@ def main() -> None:
     search.add_argument("-k", type=int, default=5)
     search.add_argument("--mode", choices=["hybrid", "vector", "text"], default="hybrid")
     search.set_defaults(func=cmd_search)
+
+    commands.add_parser("seed", help="(re)create the switch request test data").set_defaults(
+        func=cmd_seed
+    )
+
+    tool = commands.add_parser("tool", help="call one agent tool directly with JSON arguments")
+    tool.add_argument("name")
+    tool.add_argument("arguments", help='JSON, e.g. \'{"request_id": "LW-2026-0003"}\'')
+    tool.set_defaults(func=cmd_tool)
 
     args = parser.parse_args()
     args.func(args)

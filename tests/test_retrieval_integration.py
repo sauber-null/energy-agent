@@ -8,22 +8,21 @@ import pytest
 from energy_agent.config import get_settings
 from energy_agent.rag.embeddings import OllamaEmbedder
 from energy_agent.rag.search import Retriever
-from energy_agent.rag.store import connect, count_chunks
+from energy_agent.rag.store import count_chunks
 
 pytestmark = pytest.mark.integration
 
 
 @pytest.fixture(scope="module")
-def retriever():
-    settings = get_settings()
+def retriever(db_conn):
     try:
-        conn = connect(settings.database_url + "?connect_timeout=2")
-        if count_chunks(conn) == 0:
+        if count_chunks(db_conn) == 0:
             pytest.skip("no chunks ingested")
-    except Exception as exc:  # database down or schema missing
-        pytest.skip(f"database not available: {exc}")
-    yield Retriever(conn, OllamaEmbedder(settings.ollama_host, settings.embedding_model))
-    conn.close()
+    except Exception as exc:  # schema missing
+        db_conn.rollback()
+        pytest.skip(f"chunks table not available: {exc}")
+    settings = get_settings()
+    return Retriever(db_conn, OllamaEmbedder(settings.ollama_host, settings.embedding_model))
 
 
 @pytest.mark.parametrize(

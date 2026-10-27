@@ -37,3 +37,8 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+# Rule texts and seed rows are kept on one line each to match the source tables.
+"src/energy_agent/tools/deadlines.py" = ["E501"]
+"src/energy_agent/tools/switch_requests.py" = ["E501"]
