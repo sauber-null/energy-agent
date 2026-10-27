@@ -61,6 +61,13 @@ question ─▶ Agent ──messages + tool schemas──▶ ChatModel ─┬─
   tool schemas, run the tool calls the model returns, append the results, repeat until the
   model answers in text. The step budget is 6; the last step offers no tools, which forces
   an answer. No framework: the loop is ~60 lines and every step is visible.
+- **Guardrail: no answers from memory.** A prompt can ask for tool use but not enforce it,
+  and local models often skip the tools. The loop rejects an answer given before any tool
+  returned a result, once, with a reminder; if the model still answers without tool results,
+  the result is marked `grounded=False` (shown as a warning in the CLI, counted in the eval).
+  It guarantees a tool call, not that the answer uses it: qwen3:8b searched after the
+  reminder and then repeated its earlier answer. Checking the answer against the tool
+  results is part of the evaluation. `Agent(require_tool_use=False)` switches it off.
 - **Provider-agnostic** ([`llm/`](src/energy_agent/llm)): the agent only knows `Message`,
   `ToolCall` and the `ChatModel` protocol. The adapters handle the differences: Mistral
   returns tool arguments as a JSON string and assigns call ids; Ollama returns a JSON object

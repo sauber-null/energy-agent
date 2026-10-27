@@ -91,6 +91,8 @@ def _print_event(event: dict) -> None:
         print(f"  → {event['tool']}({args})  [{status}]")
     elif event["event"] == "llm_call":
         print(f"  · LLM call {event['step']}: {event['latency_ms']} ms")
+    elif event["event"] == "guardrail":
+        print("  ! answer without tool call rejected, asking the model to use a tool")
 
 
 def cmd_ask(args: argparse.Namespace) -> None:
@@ -111,6 +113,8 @@ def cmd_ask(args: argparse.Namespace) -> None:
         agent = Agent(model, tools, Tracer(on_event=_print_event))
         result = agent.run(args.question)
     print(f"\n{result.answer}\n")
+    if not result.grounded:
+        print("⚠ Not grounded: no tool returned a result, the answer is from model memory.")
     print(
         f"[{result.llm_calls} LLM calls, {len(result.tool_calls)} tool calls, "
         f"{result.prompt_tokens}+{result.completion_tokens} tokens, "

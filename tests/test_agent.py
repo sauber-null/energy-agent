@@ -22,10 +22,13 @@ class ScriptedModel:
         return ChatResponse(self.replies.pop(0), self.model, 100, 10, 5)
 
 
-def make_agent(replies: list[Message], max_steps: int = 6) -> tuple[Agent, ScriptedModel]:
+def make_agent(
+    replies: list[Message], max_steps: int = 6, require_tool_use: bool = True
+) -> tuple[Agent, ScriptedModel]:
     model = ScriptedModel(replies)
     tools = build_tools(conn=None, retriever=None)
-    return Agent(model, tools, Tracer(path=None), max_steps, date(2026, 10, 27)), model
+    agent = Agent(model, tools, Tracer(path=None), max_steps, date(2026, 10, 27), require_tool_use)
+    return agent, model
 
 
 DEADLINE_CALL = ToolCall(
@@ -58,6 +61,7 @@ def test_tool_result_is_sent_back_and_final_answer_returned():
 
 
 def test_unknown_tool_and_bad_arguments_become_errors_for_the_model():
+    no_answer = Message("assistant", "Das kann ich nicht beantworten.")
     agent, model = make_agent(
         [
             Message(
@@ -67,7 +71,8 @@ def test_unknown_tool_and_bad_arguments_become_errors_for_the_model():
                     ToolCall("c2", "calculate_deadline", "{broken json"),
                 ),
             ),
-            Message("assistant", "Das kann ich nicht beantworten."),
+            no_answer,  # rejected by the guardrail: no tool has returned a result yet
+            no_answer,
         ]
     )
     result = agent.run("?")
@@ -75,6 +80,7 @@ def test_unknown_tool_and_bad_arguments_become_errors_for_the_model():
     assert "Unknown tool 'delete_database'" in errors[0]
     assert errors[1]
     assert result.stop_reason == "answer"
+    assert not result.grounded
 
 
 def test_last_step_offers_no_tools_to_force_an_answer():
@@ -84,6 +90,49 @@ def test_last_step_offers_no_tools_to_force_an_answer():
     assert [len(tools) for _, tools in model.calls] == [3, 3, 0]
     assert result.answer == "Antwort"
     assert result.stop_reason == "max_steps"
+
+
+def test_answer_without_tool_is_rejected_once_then_grounded():
+    agent, model = make_agent(
+        [
+            Message("assistant", "Aus dem Gedächtnis: der Ersatzversorger."),
+            Message("assistant", tool_calls=(DEADLINE_CALL,)),
+            Message("assistant", "Bis Mo 28.12.2026, 11:00 Uhr."),
+        ]
+    )
+    result = agent.run("?")
+    reminder = model.calls[1][0][-1]
+    assert reminder.role == "user" and "without using a tool" in reminder.content
+    assert result.guardrail_retries == 1
+    assert result.grounded
+    assert result.answer == "Bis Mo 28.12.2026, 11:00 Uhr."
+    assert "guardrail" in [e["event"] for e in agent.tracer.events]
+
+
+def test_answer_still_without_tool_is_returned_but_not_grounded():
+    agent, _ = make_agent([Message("assistant", "Antwort A"), Message("assistant", "Antwort B")])
+    result = agent.run("?")
+    assert result.answer == "Antwort B"
+    assert not result.grounded
+    assert result.llm_calls == 2  # only one retry
+
+
+def test_failed_tool_calls_do_not_count_as_grounded():
+    agent, _ = make_agent(
+        [
+            Message("assistant", tool_calls=(ToolCall("c1", "calculate_deadline", {}),)),
+            Message("assistant", "Antwort"),
+            Message("assistant", "Antwort"),
+        ]
+    )
+    result = agent.run("?")
+    assert not result.grounded and result.guardrail_retries == 1
+
+
+def test_guardrail_can_be_switched_off():
+    agent, _ = make_agent([Message("assistant", "Antwort")], require_tool_use=False)
+    result = agent.run("?")
+    assert result.answer == "Antwort" and result.llm_calls == 1 and not result.grounded
 
 
 def test_every_step_is_traced():

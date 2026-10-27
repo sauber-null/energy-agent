@@ -4,6 +4,11 @@
 2. If the model answers with tool calls, run them and append their results.
 3. Repeat until the model answers with text or the step budget is used up. The last
    step offers no tools, which forces a final answer.
+
+Guardrail: a prompt can ask the model to use tools but cannot enforce it, so the loop
+checks it. An answer given before any successful tool call is rejected once with a
+reminder; if the model still answers without tool results, the answer is returned with
+grounded=False so callers can flag or withhold it.
 """
 
 import json
@@ -29,6 +34,11 @@ Rules:
 - If the tools do not answer the question, say so instead of guessing.
 - Answer in the language of the question, briefly and precisely."""
 
+TOOL_REMINDER = (
+    "You answered without using a tool. Do not answer from memory: call search_documents, "
+    "calculate_deadline or get_switch_status first and base the answer on the result."
+)
+
 StopReason = Literal["answer", "max_steps"]
 
 
@@ -43,6 +53,12 @@ class AgentResult:
     prompt_tokens: int = 0
     completion_tokens: int = 0
     latency_ms: int = 0
+    guardrail_retries: int = 0
+
+    @property
+    def grounded(self) -> bool:
+        """At least one tool call returned a result (not an error)."""
+        return any("error" not in call["result"] for call in self.tool_calls)
 
 
 class Agent:
@@ -53,6 +69,7 @@ class Agent:
         tracer: Tracer | None = None,
         max_steps: int = 6,
         today: date | None = None,
+        require_tool_use: bool = True,
     ):
         self.model = model
         self.tools = {tool.name: tool for tool in tools}
@@ -60,6 +77,7 @@ class Agent:
         self.tracer = tracer or Tracer(path=None)
         self.max_steps = max_steps
         self.today = today or date.today()
+        self.require_tool_use = require_tool_use
 
     def run(self, question: str) -> AgentResult:
         run_id = uuid.uuid4().hex[:12]
@@ -99,6 +117,18 @@ class Agent:
             )
 
             if not reply.tool_calls:
+                if (
+                    self.require_tool_use
+                    and not result.grounded
+                    and result.guardrail_retries == 0
+                    and not last_step
+                ):
+                    result.guardrail_retries += 1
+                    self.tracer.event(run_id, "guardrail", step=step, rule="answer_without_tool")
+                    # A user message, because not every provider accepts a system message
+                    # in the middle of a conversation.
+                    messages.append(Message("user", TOOL_REMINDER))
+                    continue
                 result.answer = reply.content
                 result.stop_reason = "max_steps" if last_step else "answer"
                 break
@@ -130,6 +160,8 @@ class Agent:
             run_id,
             "run_end",
             stop_reason=result.stop_reason,
+            grounded=result.grounded,
+            guardrail_retries=result.guardrail_retries,
             answer=result.answer,
             llm_calls=result.llm_calls,
             tool_calls=len(result.tool_calls),
