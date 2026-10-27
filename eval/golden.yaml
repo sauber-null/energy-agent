@@ -1,0 +1,243 @@
+# Golden questions for the end-to-end evaluation (`energy-agent eval`).
+#
+# Expected answers were derived by hand from the GPKE / BK6-22-024 texts and the GPKE
+# working-day rules, not from the agent. "Today" is fixed to 2026-10-27 during the eval.
+#
+# Fields:
+#   tools          tools that must be called
+#   deadline_args  a calculate_deadline call must use this process and one of these steps
+#   dates / times  must appear in the answer (any common German or ISO format)
+#   keywords       each inner list is a group; one alternative per group must appear
+#   forbidden      must not appear in the answer
+#   section        retrieval eval: a top-k passage must come from a section containing this
+#   reference_call calculate_deadline arguments that must reproduce dates/times (checked in
+#                  tests/test_golden.py, so golden set and tool cannot drift apart silently)
+
+# --- Deadlines -------------------------------------------------------------------------
+
+- id: lb-ablehnung-weihnachten
+  category: deadline
+  question: "Ein Lieferant hat seine Anmeldung zum Lieferbeginn am 23.12.2026 um 10:00 Uhr an den Netzbetreiber gesendet. Bis wann muss der Netzbetreiber die Anmeldung spätestens ablehnen?"
+  tools: [calculate_deadline]
+  deadline_args: {process: lieferbeginn, step: [6]}
+  dates: [2026-12-28]
+  times: ["11:00"]
+  reference_call: {process: lieferbeginn, step: 6, step1_sent_at: "2026-12-23T10:00"}
+
+- id: lb-fruehester-beginn-pfingsten
+  category: deadline
+  question: "Ein Lieferant meldet am Freitag, 6. Juni 2025 eine Marktlokation zum Lieferbeginn an. Ab wann kann er frühestens beliefern?"
+  tools: [calculate_deadline]
+  deadline_args: {process: lieferbeginn, step: [1]}
+  dates: [2025-06-11]
+  reference_call: {process: lieferbeginn, step: 1, step1_sent_at: "2025-06-06T12:00"}
+
+- id: lb-fruehester-beginn-montag
+  category: deadline
+  question: "Die Anmeldung zum Lieferbeginn wird am Montag, 26.10.2026 verschickt. Was ist der früheste mögliche Lieferbeginn?"
+  tools: [calculate_deadline]
+  deadline_args: {process: lieferbeginn, step: [1]}
+  dates: [2026-10-28]
+  reference_call: {process: lieferbeginn, step: 1, step1_sent_at: "2026-10-26T12:00"}
+
+- id: lb-spaetester-anmeldetag
+  category: deadline
+  question: "Der Lieferbeginn soll am 02.11.2026 sein. An welchem Tag muss die Anmeldung spätestens an den Netzbetreiber übermittelt werden?"
+  tools: [calculate_deadline]
+  deadline_args: {process: lieferbeginn, step: [1]}
+  dates: [2026-10-29]
+  reference_call: {process: lieferbeginn, step: 1, assignment_date: "2026-11-02"}
+
+- id: malo-anfrage-nacht
+  category: deadline
+  question: "Ein Lieferant stellt am 30.10.2026 um 23:30 Uhr eine Anfrage zur Ermittlung der MaLo-ID. Bis wann muss der Netzbetreiber antworten?"
+  tools: [calculate_deadline]
+  deadline_args: {process: malo_ermittlung, step: [2]}
+  dates: [2026-10-31]
+  times: ["01:30"]
+  reference_call: {process: malo_ermittlung, step: 2, step1_sent_at: "2026-10-30T23:30"}
+
+- id: kuendigung-antwort
+  category: deadline
+  question: "Der neue Lieferant schickt dem bisherigen Lieferanten am Freitag, 30.10.2026 eine Kündigung. Bis wann muss der bisherige Lieferant spätestens antworten?"
+  tools: [calculate_deadline]
+  deadline_args: {process: kuendigung, step: [2]}
+  dates: [2026-11-02]
+  reference_call: {process: kuendigung, step: 2, step1_sent_at: "2026-10-30T09:00"}
+
+- id: abmeldung-spaetester-tag
+  category: deadline
+  question: "Ein Lieferant möchte die Belieferung einer Marktlokation (keine EEG-Anlage) zum Zuordnungsende 01.12.2026 beim Netzbetreiber abmelden. Wann muss die Abmeldung spätestens übermittelt werden?"
+  tools: [calculate_deadline]
+  deadline_args: {process: lieferende_lf, step: [1]}
+  dates: [2026-11-29]
+  reference_call: {process: lieferende_lf, step: 1, assignment_date: "2026-12-01"}
+
+- id: abmeldung-bestaetigung-jahreswechsel
+  category: deadline
+  question: "Eine Abmeldung zum Lieferende wurde am 30.12.2026 um 14:00 Uhr an den Netzbetreiber gesendet. Bis wann muss der Netzbetreiber die Beendigung der Zuordnung spätestens bestätigen?"
+  tools: [calculate_deadline]
+  deadline_args: {process: lieferende_lf, step: [2]}
+  dates: [2027-01-04]
+  times: ["06:00"]
+  reference_call: {process: lieferende_lf, step: 2, step1_sent_at: "2026-12-30T14:00"}
+
+- id: lieferende-nb-fenster-busstag
+  category: deadline
+  question: "Der Netzbetreiber kündigt am 17.11.2026 dem Lieferanten die Beendigung seiner Zuordnung an (Lieferende vom Netzbetreiber ausgehend). In welchem Zeitfenster muss der Netzbetreiber die Beendigung der Zuordnung übermitteln?"
+  tools: [calculate_deadline]
+  deadline_args: {process: lieferende_nb, step: [3]}
+  dates: [2026-11-19]
+  times: ["05:00", "06:00"]
+  reference_call: {process: lieferende_nb, step: 3, step1_sent_at: "2026-11-17T09:00"}
+
+- id: ev-antwort-gleicher-tag
+  category: deadline
+  question: "Der Netzbetreiber kündigt dem Ersatzversorger am 14.10.2026 um 11:00 Uhr dessen Zuordnung zum 15.10.2026 an. Bis wann muss der Ersatzversorger antworten?"
+  tools: [calculate_deadline]
+  deadline_args: {process: ersatzversorgung_beginn, step: [2]}
+  dates: [2026-10-14]
+  times: ["15:00"]
+  reference_call: {process: ersatzversorgung_beginn, step: 2, step1_sent_at: "2026-10-14T11:00", assignment_date: "2026-10-15"}
+
+- id: lb-bestaetigung-fronleichnam
+  category: deadline
+  question: "Eine Anmeldung zum Lieferbeginn wurde am Mittwoch, 03.06.2026 an den Netzbetreiber gesendet. Bis wann muss der Netzbetreiber die Zuordnung des neuen Lieferanten spätestens bestätigen?"
+  tools: [calculate_deadline]
+  deadline_args: {process: lieferbeginn, step: [5]}
+  dates: [2026-06-05]
+  times: ["11:00"]
+  reference_call: {process: lieferbeginn, step: 5, step1_sent_at: "2026-06-03T09:00"}
+
+# --- Switch request status ---------------------------------------------------------------
+
+- id: status-abgelehnt-grund
+  category: status
+  question: "Wie ist der Stand der Wechselanfrage LW-2026-0002 und warum?"
+  tools: [get_switch_status]
+  keywords: [["abgelehnt"], ["nicht eindeutig", "identifizier"]]
+
+- id: status-per-malo
+  category: status
+  question: "Gibt es eine Wechselanfrage für die Marktlokation 53101010105 und wie ist ihr Status?"
+  tools: [get_switch_status]
+  keywords: [["LW-2026-0006"], ["abgelehnt"], ["Widerspruch", "Mindestlaufzeit"]]
+
+- id: status-ersatzversorgung
+  category: status
+  question: "Wer beliefert die Marktlokation aus der Anfrage EV-2026-0005 und seit wann?"
+  tools: [get_switch_status]
+  keywords: [["Beispiel Stadtwerke"]]
+  dates: [2026-10-15]
+
+- id: status-unbekannt
+  category: status
+  question: "Wie ist der Status der Wechselanfrage LW-2026-0999?"
+  tools: [get_switch_status]
+  keywords: [["nicht gefunden", "keine", "nicht vorhanden", "existiert nicht", "nicht bekannt", "nicht finden", "kein Eintrag"]]
+
+- id: malo-ungueltig
+  category: status
+  question: "Wie ist der Status der Marktlokation 51234567890?"
+  tools: [get_switch_status]
+  keywords: [["ungültig", "Prüfziffer", "nicht gültig", "keine gültige", "fehlerhaft"]]
+
+# --- Status and deadline combined ------------------------------------------------------
+
+- id: kombi-status-frist-0003
+  category: combined
+  question: "Wie ist der Status der Wechselanfrage LW-2026-0003 und bis wann muss der Netzbetreiber spätestens antworten?"
+  tools: [get_switch_status, calculate_deadline]
+  deadline_args: {process: lieferbeginn, step: [5, 6]}
+  keywords: [["angemeldet"]]
+  dates: [2026-10-27]
+  times: ["11:00"]
+
+- id: kombi-bestaetigung-0007
+  category: combined
+  question: "Bis wann muss der Netzbetreiber die Anmeldung LW-2026-0007 bestätigen oder ablehnen?"
+  tools: [get_switch_status, calculate_deadline]
+  deadline_args: {process: lieferbeginn, step: [5, 6]}
+  dates: [2026-10-28]
+  times: ["11:00"]
+
+- id: kombi-fristgerecht-0007
+  category: combined
+  question: "Wurde die Anmeldung LW-2026-0007 fristgerecht für den gewünschten Lieferbeginn gesendet?"
+  tools: [get_switch_status, calculate_deadline]
+  deadline_args: {process: lieferbeginn, step: [1]}
+  keywords: [["fristgerecht", "rechtzeitig", "eingehalten", "innerhalb der Frist", "pünktlich"]]
+  forbidden: ["nicht fristgerecht", "verspätet", "zu spät"]
+
+# --- Questions answered from the documents ---------------------------------------------
+
+- id: rag-ohne-vertrag
+  category: rag
+  question: "Wer beliefert einen Letztverbraucher, der Strom entnimmt, ohne dass ein Liefervertrag besteht?"
+  tools: [search_documents]
+  keywords: [["Ersatzversorg", "Ersatz-/Grundversorg", "E/G"]]
+  section: ["Ersatz-/Grundversorgung"]
+
+- id: rag-ev-nach-drei-monaten
+  category: rag
+  question: "Was passiert mit einem Kunden, der seit drei Monaten in der Ersatzversorgung ist?"
+  tools: [search_documents]
+  keywords: [["Grundversorgung"]]
+  section: ["Beginn der Ersatz-/Grundversorgung"]
+
+- id: rag-ev-kuendigung
+  category: rag
+  question: "Muss ein neuer Lieferant eine Kündigung schicken, wenn der Kunde in der Ersatzversorgung ist?"
+  tools: [search_documents]
+  keywords: [["keine Kündigung", "nicht erforderlich", "nicht kündigungspflichtig", "kein kündigungspflichtig", "nicht notwendig", "nicht nötig"]]
+  section: ["Kündigung"]
+
+- id: rag-schriftform
+  category: rag
+  question: "Darf der bisherige Lieferant eine Kündigung zurückweisen, nur weil die vertraglich vereinbarte Schriftform nicht eingehalten wurde?"
+  tools: [search_documents]
+  keywords: [["Nein", "nicht allein", "darf nicht", "nicht zurückweisen", "nicht zurückgewiesen"]]
+  section: ["Kündigung"]
+
+- id: rag-zuordnungsbeginn-uhrzeit
+  category: rag
+  question: "Zu welcher Uhrzeit beginnt eine Zuordnung (Zuordnungsbeginn) laut GPKE?"
+  tools: [search_documents]
+  times: ["00:00"]
+  section: ["Abkürzungen und Definitionen", "Fristenberechnung"]
+
+- id: rag-werktag
+  category: rag
+  question: "Wie definiert die GPKE einen Werktag?"
+  tools: [search_documents]
+  keywords: [["Samstag"], ["Sonntag"], ["Feiertag"], ["24.12", "24. Dezember", "Heiligabend"]]
+  section: ["Fristenberechnung", "Abkürzungen und Definitionen"]
+
+- id: rag-anmeldung-identifikation
+  category: rag
+  question: "Mit welcher Kennung muss der neue Lieferant eine verbrauchende Marktlokation in der Anmeldung identifizieren?"
+  tools: [search_documents]
+  keywords: [["MaLo-ID", "Marktlokations-ID", "Marktlokations-Identifikationsnummer"]]
+  section: ["Lieferbeginn"]
+
+- id: rag-ev-keine-antwort
+  category: rag
+  question: "Was passiert, wenn der Ersatzversorger auf die Ankündigung seiner Zuordnung nicht fristgerecht antwortet?"
+  tools: [search_documents]
+  keywords: [["NB", "Netzbetreiber"], ["ordnet", "zugeordnet"]]
+  section: ["Beginn der Ersatz-/Grundversorgung"]
+
+- id: rag-enwg-24h
+  category: rag
+  question: "Ab wann muss der Lieferantenwechsel nach dem EnWG technisch binnen 24 Stunden möglich sein?"
+  tools: [search_documents]
+  dates: [2026-01-01]
+  section: ["A.", "Inkrafttreten"]
+
+# --- Out of scope ----------------------------------------------------------------------
+
+- id: ausserhalb-preis
+  category: negative
+  question: "Wie hoch ist der Arbeitspreis in der Grundversorgung bei der Beispiel Stadtwerke AG?"
+  keywords: [["nicht", "keine", "kann ich nicht"]]
+  forbidden: ["ct/kWh", "Cent", "€", "EUR"]

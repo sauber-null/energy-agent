@@ -122,6 +122,65 @@ def cmd_ask(args: argparse.Namespace) -> None:
     )
 
 
+def cmd_eval(args: argparse.Namespace) -> None:
+    from energy_agent.agent import Agent
+    from energy_agent.evaluation.golden import EVAL_TODAY, load_golden
+    from energy_agent.evaluation.runner import run_golden, save_results, summarize
+    from energy_agent.llm import create_chat_model
+    from energy_agent.rag.embeddings import OllamaEmbedder
+    from energy_agent.rag.search import Retriever
+    from energy_agent.rag.store import connect
+    from energy_agent.tools.registry import build_tools
+    from energy_agent.tools.switch_requests import seed
+    from energy_agent.tracing import Tracer
+
+    settings = get_settings()
+    provider = args.provider or settings.llm_provider
+    if args.model:
+        field = "mistral_model" if provider == "mistral" else "ollama_model"
+        settings = settings.model_copy(update={field: args.model})
+    model = create_chat_model(settings, provider)
+    cases = load_golden()
+    if args.cases:
+        cases = [c for c in cases if c.id in args.cases.split(",")]
+    guardrail = not args.no_guardrail
+    print(f"{model.provider} / {model.model}, guardrail {'on' if guardrail else 'off'}, "
+          f"{len(cases)} cases")  # fmt: skip
+
+    def show(r) -> None:
+        mark = "✓" if r.passed else "✗"
+        print(f"{mark} {r.id:38s} {r.latency_ms / 1000:5.1f}s  {'; '.join(r.failures)[:150]}")
+
+    embedder = OllamaEmbedder(settings.ollama_host, settings.embedding_model)
+    with connect(settings.database_url) as conn:
+        seed(conn)  # the cases expect the original test data
+        tools = build_tools(conn, Retriever(conn, embedder))
+        agent = Agent(model, tools, Tracer(), today=EVAL_TODAY, require_tool_use=guardrail)
+        results = run_golden(agent, cases, on_result=show)
+
+    summary = summarize(results)
+    meta = {"provider": model.provider, "model": model.model, "guardrail": guardrail}
+    path = save_results(results, summary, meta)
+    print(json.dumps(summary, indent=2))
+    print(f"results written to {path.relative_to(path.parents[2])}")
+
+
+def cmd_eval_retrieval(args: argparse.Namespace) -> None:
+    from energy_agent.evaluation.golden import load_golden
+    from energy_agent.evaluation.retrieval import retrieval_metrics
+    from energy_agent.rag.embeddings import OllamaEmbedder
+    from energy_agent.rag.search import Retriever
+    from energy_agent.rag.store import connect
+
+    settings = get_settings()
+    embedder = OllamaEmbedder(settings.ollama_host, settings.embedding_model)
+    with connect(settings.database_url) as conn:
+        metrics = retrieval_metrics(Retriever(conn, embedder), load_golden(), k=args.k)
+    print(f"{'mode':8s} " + " ".join(f"{name:>7s}" for name in next(iter(metrics.values()))))
+    for mode, values in metrics.items():
+        print(f"{mode:8s} " + " ".join(f"{v:7.3f}" for v in values.values()))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(prog="energy-agent")
     commands = parser.add_subparsers(required=True)
@@ -157,6 +216,17 @@ def main() -> None:
     ask.add_argument("question")
     ask.add_argument("--provider", choices=["mistral", "ollama"], help="default: LLM_PROVIDER")
     ask.set_defaults(func=cmd_ask)
+
+    evaluate = commands.add_parser("eval", help="run the golden questions through the agent")
+    evaluate.add_argument("--provider", choices=["mistral", "ollama"])
+    evaluate.add_argument("--model", help="override the model of the provider")
+    evaluate.add_argument("--no-guardrail", action="store_true")
+    evaluate.add_argument("--cases", help="comma-separated case ids")
+    evaluate.set_defaults(func=cmd_eval)
+
+    retrieval = commands.add_parser("eval-retrieval", help="hit@k and MRR per search mode")
+    retrieval.add_argument("-k", type=int, default=5)
+    retrieval.set_defaults(func=cmd_eval_retrieval)
 
     args = parser.parse_args()
     args.func(args)

@@ -10,6 +10,7 @@ dependencies = [
     "psycopg[binary]>=3.2",
     "pydantic-settings>=2.4",
     "pymupdf>=2.0",
+    "pyyaml>=6.0",
 ]
 
 [project.scripts]
@@ -27,8 +28,10 @@ build-backend = "uv_build"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = "-m 'not eval'"
 markers = [
     "integration: needs the Postgres container and Ollama with an ingested corpus",
+    "eval: runs the golden set against a real LLM (slow, opt-in: pytest -m eval)",
 ]
 
 [tool.ruff]
