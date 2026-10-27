@@ -5,13 +5,10 @@ Usage: uv run python scripts/download_sources.py
 
 import hashlib
 import sys
-import tomllib
 import urllib.request
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
-SOURCES = ROOT / "data" / "sources.toml"
-RAW_DIR = ROOT / "data" / "raw"
+from energy_agent.sources import RAW_DIR, load_sources
 
 # bundesnetzagentur.de rejects some non-browser clients, so send a browser User-Agent.
 USER_AGENT = (
@@ -34,21 +31,18 @@ def download(url: str, target: Path) -> None:
 
 
 def main() -> int:
-    documents = tomllib.loads(SOURCES.read_text())["documents"]
     RAW_DIR.mkdir(parents=True, exist_ok=True)
     mismatches = 0
-    for doc in documents:
-        target = RAW_DIR / doc["file"]
-        if not target.exists():
-            print(f"downloading {doc['id']} ...")
-            download(doc["url"], target)
-        actual = sha256(target)
-        expected = doc.get("sha256")
-        if expected and actual != expected:
-            print(f"CHECKSUM MISMATCH {doc['id']}: expected {expected}, got {actual}")
+    for source in load_sources():
+        if not source.path.exists():
+            print(f"downloading {source.id} ...")
+            download(source.url, source.path)
+        actual = sha256(source.path)
+        if source.sha256 and actual != source.sha256:
+            print(f"CHECKSUM MISMATCH {source.id}: expected {source.sha256}, got {actual}")
             mismatches += 1
         else:
-            print(f"ok {doc['id']}  {target.stat().st_size // 1024} KB  sha256={actual}")
+            print(f"ok {source.id}  {source.path.stat().st_size // 1024} KB  sha256={actual}")
     return 1 if mismatches else 0
 
 

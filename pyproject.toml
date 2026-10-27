@@ -6,10 +6,11 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "pydantic-settings>=2.4",
+    "pymupdf>=2.0",
 ]
 
 [project.scripts]
-energy-agent = "energy_agent:main"
+energy-agent = "energy_agent.cli:main"
 
 [dependency-groups]
 dev = [
