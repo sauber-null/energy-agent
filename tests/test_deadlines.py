@@ -26,6 +26,7 @@ def test_latest_registration_day_for_a_given_supply_start():
     )
     assert result["latest_transmission_day"] == "2026-10-29"
     assert result["sent_in_time"] is True
+    assert result["earliest_start"] == "2026-10-28"  # both inputs given -> both answers
 
 
 def test_latest_deregistration_day_uses_zuordnungsende():

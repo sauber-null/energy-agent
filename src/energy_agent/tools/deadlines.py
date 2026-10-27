@@ -183,8 +183,9 @@ def calculate_deadline(
 
     step1_sent_at:   ÜZ of the step 1 message (Anmeldung, Abmeldung, Anfrage, Ankündigung ...).
     assignment_date: Zuordnungsbeginn (Lieferbeginn, Ersatzversorgung) or Zuordnungsende
-                     (Lieferende). For step 1 of lieferbeginn/lieferende pass either this
-                     (-> latest ÜT for step 1) or step1_sent_at (-> earliest possible date).
+                     (Lieferende). For step 1 of lieferbeginn/lieferende, step1_sent_at gives
+                     the earliest possible date and assignment_date the latest ÜT; with both,
+                     both are returned plus whether step 1 was sent in time.
     """
     rule = find_rule(process, step)
     result = {
@@ -197,31 +198,35 @@ def calculate_deadline(
 
     if rule.kind is RuleKind.BEFORE_ASSIGNMENT:
         noun = "Zuordnungsende" if process == "lieferende_lf" else "Zuordnungsbeginn"
-        if assignment_date:
-            last_wt = previous_werktag(assignment_date)
-            latest_day = last_wt - timedelta(days=1)
-            result["latest_transmission_day"] = latest_day.isoformat()
-            result["explanation"] = (
-                f"{noun}: {format_date(assignment_date)}. Letzter WT davor: {format_date(last_wt)}. "
-                f"Der Tag davor ist der späteste ÜT: {format_date(latest_day)}."
+        if not (assignment_date or step1_sent_at):
+            raise ValueError(
+                f"Für Schritt 1 wird assignment_date ({noun}) oder step1_sent_at benötigt."
             )
-            if step1_sent_at:
-                result["sent_in_time"] = step1_sent_at.date() <= latest_day
-            return result
+        # Small models sometimes fill both fields, so compute whatever is given instead of
+        # letting one silently win.
+        explanations = []
         if step1_sent_at:
             first_wt = next_werktag(step1_sent_at.date())
             earliest = first_wt + timedelta(days=1)
             result[f"earliest_{'end' if noun == 'Zuordnungsende' else 'start'}"] = (
                 earliest.isoformat()
             )
-            result["explanation"] = (
+            explanations.append(
                 f"{_next_wt_explanation(step1_sent_at.date(), first_wt)} Frühester {noun} ist der "
                 f"Tag danach: {format_date(earliest)}, 00:00 Uhr."
             )
-            return result
-        raise ValueError(
-            f"Für Schritt 1 wird assignment_date ({noun}) oder step1_sent_at benötigt."
-        )
+        if assignment_date:
+            last_wt = previous_werktag(assignment_date)
+            latest_day = last_wt - timedelta(days=1)
+            result["latest_transmission_day"] = latest_day.isoformat()
+            explanations.append(
+                f"{noun}: {format_date(assignment_date)}. Letzter WT davor: {format_date(last_wt)}. "
+                f"Der Tag davor ist der späteste ÜT: {format_date(latest_day)}."
+            )
+            if step1_sent_at:
+                result["sent_in_time"] = step1_sent_at.date() <= latest_day
+        result["explanation"] = " ".join(explanations)
+        return result
 
     if step1_sent_at is None:
         raise ValueError("step1_sent_at (Übermittlungszeitpunkt von Schritt 1) wird benötigt.")
