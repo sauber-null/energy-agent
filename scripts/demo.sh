@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Start everything the web demo needs and keep the Mac awake while it runs.
-# The Cloudflare tunnel (demo.example.com) starts too once it is configured.
+# The Cloudflare tunnel starts too once ~/.cloudflared/config.yml exists.
 # Stop with Ctrl+C.
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -17,10 +17,12 @@ if ! curl -sf http://localhost:11434/api/version >/dev/null; then
   until curl -sf http://localhost:11434/api/version >/dev/null; do sleep 1; done
 fi
 
-if command -v cloudflared >/dev/null && [ -f "$HOME/.cloudflared/config.yml" ]; then
+tunnel_config="$HOME/.cloudflared/config.yml"
+if command -v cloudflared >/dev/null && [ -f "$tunnel_config" ]; then
   cloudflared tunnel run energy-agent &
   trap 'kill $! 2>/dev/null' EXIT
-  echo "Tunnel started: https://demo.example.com"
+  # The public hostname lives only in the local config, not in the repository.
+  echo "Tunnel started: https://$(awk '/hostname:/ {print $3; exit}' "$tunnel_config")"
 else
   echo "No Cloudflare tunnel configured, the demo runs on http://127.0.0.1:8000 only."
 fi
