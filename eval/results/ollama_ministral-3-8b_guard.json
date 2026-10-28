@@ -4,7 +4,7 @@
     "model": "ministral-3:8b",
     "guardrail": true,
     "run_at": "2026-10-27T23:09:12",
-    "commit": "a687961"
+    "commit": "b0f4286"
   },
   "summary": {
     "cases": 29,
