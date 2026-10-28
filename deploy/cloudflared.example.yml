@@ -1,0 +1,10 @@
+# Copy to ~/.cloudflared/config.yml after `cloudflared tunnel create energy-agent`
+# and put in the tunnel id that command prints.
+tunnel: energy-agent
+credentials-file: /Users/YOUR_USER/.cloudflared/TUNNEL_ID.json
+
+ingress:
+  # Only the demo is exposed; it listens on localhost and asks for the demo password.
+  - hostname: demo.example.com
+    service: http://localhost:8000
+  - service: http_status:404

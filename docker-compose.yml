@@ -1,6 +1,7 @@
 services:
   db:
     image: pgvector/pgvector:pg17
+    restart: unless-stopped  # back after a reboot, so the demo only needs Docker running
     environment:
       POSTGRES_USER: energy
       POSTGRES_PASSWORD: energy  # local development only

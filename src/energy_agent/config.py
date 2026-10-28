@@ -25,6 +25,11 @@ class Settings(BaseSettings):
 
     database_url: str = "postgresql://energy:energy@localhost:5432/energy_agent"
 
+    # Web demo (`energy-agent serve`): the server refuses to start without a password.
+    demo_password: SecretStr | None = None
+    demo_questions_per_minute: int = 6
+    demo_questions_per_day: int = 150
+
     @property
     def active_model(self) -> str:
         return self.mistral_model if self.llm_provider == "mistral" else self.ollama_model

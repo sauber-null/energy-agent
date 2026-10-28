@@ -181,6 +181,17 @@ def cmd_eval_retrieval(args: argparse.Namespace) -> None:
         print(f"{mode:8s} " + " ".join(f"{v:7.3f}" for v in values.values()))
 
 
+def cmd_serve(args: argparse.Namespace) -> None:
+    import uvicorn
+
+    from energy_agent.web.app import create_app, default_runner
+
+    settings = get_settings()
+    app = create_app(settings, default_runner(settings))
+    # Only reachable from this machine; the Cloudflare tunnel connects locally.
+    uvicorn.run(app, host="127.0.0.1", port=args.port)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(prog="energy-agent")
     commands = parser.add_subparsers(required=True)
@@ -227,6 +238,10 @@ def main() -> None:
     retrieval = commands.add_parser("eval-retrieval", help="hit@k and MRR per search mode")
     retrieval.add_argument("-k", type=int, default=5)
     retrieval.set_defaults(func=cmd_eval_retrieval)
+
+    serve = commands.add_parser("serve", help="web demo on http://127.0.0.1:8000")
+    serve.add_argument("--port", type=int, default=8000)
+    serve.set_defaults(func=cmd_serve)
 
     args = parser.parse_args()
     args.func(args)

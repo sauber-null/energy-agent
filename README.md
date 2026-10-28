@@ -48,6 +48,26 @@ Quelle: GPKE Teil 2 (Anlage 1b zu BK6-22-024), 2.1.2 SD: Lieferbeginn, Nr. 6, S.
 [3 LLM calls, 2 tool calls, 4656+233 tokens, 2.8 s, trace 6aa7b1ca7d82 in traces.jsonl]
 ```
 
+## Web demo
+
+`energy-agent serve` starts a small FastAPI app on `127.0.0.1:8000`: one page with a
+question box, a switch between the Mistral API and the local model, and a live view of
+every agent step (model calls, tool calls with arguments and results, guardrail) streamed
+as server-sent events, followed by the answer.
+
+It is published as `https://demo.example.com` through a Cloudflare Tunnel from the
+laptop, so it works while the laptop is on and costs nothing:
+
+```bash
+scripts/demo.sh    # database, Ollama, tunnel (if configured), server; keeps the Mac awake
+```
+
+The page protects itself because it is reachable from the internet: HTTP Basic auth on
+every route (the server refuses to start without `DEMO_PASSWORD`), a global limit of
+6 questions per minute and 150 per day, one question at a time, 500 characters per
+question, `noindex` headers and no API docs. The tunnel exposes only this port, and the
+agent's tools only read data. Tunnel setup: [`deploy/cloudflared.example.yml`](deploy/cloudflared.example.yml).
+
 ## Agent and LLM layer
 
 ```

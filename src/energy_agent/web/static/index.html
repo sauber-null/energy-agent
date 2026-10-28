@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Energy Agent · GPKE</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --panel: #ffffff; --text: #1c2430; --muted: #5d6877; --border: #dde2e8;
+    --accent: #0b6e4f; --accent-soft: #e3f2ec; --warn: #9a5b00; --warn-soft: #fff3df;
+    --error: #b42318; --error-soft: #fde8e6; --code: #f0f2f5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #11151a; --panel: #1a2027; --text: #e6eaef; --muted: #9aa6b2; --border: #2c343e;
+      --accent: #3ccf91; --accent-soft: #163a2c; --warn: #f2b45a; --warn-soft: #3a2c14;
+      --error: #ff8a80; --error-soft: #3d1c1a; --code: #222a33;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 920px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .lead { color: var(--muted); margin: 0 0 20px; }
+  .panel {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    padding: 16px; margin-bottom: 16px;
+  }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  textarea {
+    width: 100%; min-height: 76px; resize: vertical; padding: 10px; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--bg); color: var(--text); font: inherit;
+  }
+  button {
+    font: inherit; border-radius: 8px; border: 1px solid var(--border); cursor: pointer;
+    background: var(--panel); color: var(--text); padding: 6px 12px;
+  }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  @media (prefers-color-scheme: dark) { button.primary { color: #0d1f17; } }
+  button:disabled { opacity: .55; cursor: wait; }
+  .chip { font-size: 13px; padding: 4px 10px; color: var(--muted); text-align: left; }
+  .chip:hover { border-color: var(--accent); color: var(--text); }
+  .toggle { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .toggle label { padding: 6px 12px; cursor: pointer; font-size: 14px; }
+  .toggle input { display: none; }
+  .toggle input:checked + span { color: var(--accent); font-weight: 600; }
+  .toggle label + label { border-left: 1px solid var(--border); }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+  h2 { font-size: 14px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 0 0 10px; }
+  .step { border-left: 3px solid var(--border); padding: 4px 0 4px 10px; margin: 6px 0; font-size: 14px; }
+  .step.tool { border-color: var(--accent); }
+  .step.guard { border-color: var(--warn); background: var(--warn-soft); }
+  .step.err { border-color: var(--error); background: var(--error-soft); }
+  .muted { color: var(--muted); }
+  code, pre { background: var(--code); border-radius: 6px; font: 12.5px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace; }
+  code { padding: 1px 4px; }
+  pre { padding: 8px; margin: 6px 0 0; white-space: pre-wrap; word-break: break-word; max-height: 220px; overflow: auto; }
+  details summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+  .answer { font-size: 15px; }
+  .answer p { margin: 0 0 10px; }
+  .answer ul { margin: 0 0 10px; padding-left: 20px; }
+  .badge { display: inline-block; font-size: 12px; padding: 2px 8px; border-radius: 99px; margin-right: 6px; }
+  .badge.ok { background: var(--accent-soft); color: var(--accent); }
+  .badge.no { background: var(--warn-soft); color: var(--warn); }
+  .stats { color: var(--muted); font-size: 13px; margin-top: 10px; }
+  .about { font-size: 14px; color: var(--muted); }
+  .about li { margin-bottom: 4px; }
+  .empty { color: var(--muted); font-size: 14px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Energy Agent · GPKE</h1>
+  <p class="lead">A tool-calling agent for German electricity market processes (supplier switch,
+    supply start/end, default supply). It searches the BNetzA GPKE documents, computes process
+    deadlines in German working days and looks up switch requests in a test database.</p>
+
+  <section class="panel">
+    <div class="row" style="justify-content: space-between; margin-bottom: 10px;">
+      <div class="toggle" role="radiogroup" aria-label="Model">
+        <label><input type="radio" name="provider" value="mistral" checked><span>Mistral API (EU)</span></label>
+        <label><input type="radio" name="provider" value="ollama"><span>Local model on this MacBook</span></label>
+      </div>
+      <span class="muted" style="font-size: 13px;">Answers in the language of the question</span>
+    </div>
+    <textarea id="question" maxlength="500" placeholder="Ask about GPKE processes, deadlines or a switch request (e.g. LW-2026-0003) …"></textarea>
+    <div class="row" style="margin-top: 10px; justify-content: space-between;">
+      <div class="row" id="examples"></div>
+      <button class="primary" id="ask">Ask</button>
+    </div>
+  </section>
+
+  <div class="grid">
+    <section class="panel">
+      <h2>Agent steps</h2>
+      <div id="steps"><p class="empty">Tool calls and model calls appear here while the agent works.</p></div>
+    </section>
+    <section class="panel">
+      <h2>Answer</h2>
+      <div id="answer" class="answer"><p class="empty">The answer names its source in the documents.</p></div>
+    </section>
+  </div>
+
+  <section class="panel about">
+    <h2>How it works</h2>
+    <ul>
+      <li><strong>RAG:</strong> GPKE parts 1, 2, 4 and decision BK6-22-024 (231 pages) are chunked by section, embedded locally with bge-m3 and searched in PostgreSQL/pgvector (vector + German full-text).</li>
+      <li><strong>Tools:</strong> <code>search_documents</code>, <code>calculate_deadline</code> (rule table from GPKE part 2, working days incl. all state holidays, 24.12./31.12.), <code>get_switch_status</code> (fictional test data).</li>
+      <li><strong>Loop:</strong> plain tool-calling loop, provider-agnostic (Mistral API or Ollama), with a guardrail that rejects answers given before any tool result.</li>
+      <li><strong>Evaluation:</strong> 29 golden questions with deterministic checks: Mistral 86–90 %, the same model locally 79 %.</li>
+    </ul>
+  </section>
+</main>
+
+<script>
+const EXAMPLES = [
+  ["Status + deadline", "Wie ist der Status der Wechselanfrage LW-2026-0003 und bis wann muss der Netzbetreiber spätestens antworten?"],
+  ["Deadline over Christmas", "Ein Lieferant hat seine Anmeldung zum Lieferbeginn am 23.12.2026 um 10:00 Uhr gesendet. Bis wann muss der Netzbetreiber die Anmeldung spätestens ablehnen?"],
+  ["Default supply", "Wer beliefert einen Letztverbraucher, der Strom entnimmt, ohne dass ein Liefervertrag besteht?"],
+  ["Sent in time?", "Wurde die Anmeldung LW-2026-0007 fristgerecht für den gewünschten Lieferbeginn gesendet?"],
+];
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+
+// Minimal Markdown for model answers: escape first, then bold, inline code, lists, paragraphs.
+function markdown(text) {
+  const inline = (s) => esc(s)
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, "$1<em>$2</em>")
+    .replace(/`([^`]+)`/g, "<code>$1</code>");
+  return text.trim().split(/\n{2,}/).map((block) => {
+    const lines = block.split("\n");
+    if (lines.every((l) => /^\s*([-*]|\d+\.)\s+/.test(l))) {
+      return "<ul>" + lines.map((l) => "<li>" + inline(l.replace(/^\s*([-*]|\d+\.)\s+/, "")) + "</li>").join("") + "</ul>";
+    }
+    return "<p>" + lines.map((l) => inline(l.replace(/^#+\s*/, ""))).join("<br>") + "</p>";
+  }).join("");
+}
+
+function addStep(html, cls = "") {
+  const steps = $("steps");
+  if (steps.querySelector(".empty")) steps.innerHTML = "";
+  const div = document.createElement("div");
+  div.className = "step " + cls;
+  div.innerHTML = html;
+  steps.appendChild(div);
+}
+
+function render(event) {
+  switch (event.event) {
+    case "run_start":
+      addStep(`Model <strong>${esc(event.provider)}</strong> · <code>${esc(event.model)}</code>`);
+      break;
+    case "llm_call": {
+      const next = event.tool_calls.length ? "requests " + event.tool_calls.map((t) => `<code>${esc(t)}</code>`).join(", ") : "writes the answer";
+      addStep(`LLM call ${event.step} · ${event.latency_ms} ms · ${event.prompt_tokens + event.completion_tokens} tokens → ${next}`, "muted");
+      break;
+    }
+    case "tool_call": {
+      const args = JSON.stringify(event.arguments, null, 1);
+      const status = event.error ? `<span class="badge no">error</span>` : `<span class="badge ok">ok</span>`;
+      addStep(`${status}<strong>${esc(event.tool)}</strong><pre>${esc(args)}</pre>
+        <details><summary>result</summary><pre>${esc(event.result)}</pre></details>`, "tool");
+      break;
+    }
+    case "guardrail":
+      addStep("Guardrail: answer without a tool result rejected, the model is asked to use a tool.", "guard");
+      break;
+    case "answer": {
+      const badge = event.grounded
+        ? `<span class="badge ok">based on tool results</span>`
+        : `<span class="badge no">not grounded: no tool result</span>`;
+      $("answer").innerHTML = badge + markdown(event.answer || "(empty answer)") +
+        `<div class="stats">${event.llm_calls} LLM calls · ${event.tool_calls} tool calls · ${event.tokens.toLocaleString()} tokens · ${(event.latency_ms / 1000).toFixed(1)} s</div>`;
+      break;
+    }
+    case "error":
+      addStep(esc(event.message), "err");
+      break;
+  }
+}
+
+async function ask() {
+  const question = $("question").value.trim();
+  if (question.length < 3) return;
+  const provider = document.querySelector("input[name=provider]:checked").value;
+  $("ask").disabled = true;
+  $("steps").innerHTML = "";
+  $("answer").innerHTML = `<p class="empty">Working …</p>`;
+  try {
+    // Built from origin + path so the URL never carries user:password, which fetch rejects.
+    const endpoint = location.origin + location.pathname.replace(/[^/]*$/, "") + "api/ask";
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({question, provider}),
+    });
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      const detail = typeof body.detail === "string" ? body.detail : `HTTP ${response.status}`;
+      render({event: "error", message: detail});
+      $("answer").innerHTML = `<p class="empty">No answer.</p>`;
+      return;
+    }
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    while (true) {
+      const {value, done} = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, {stream: true});
+      let cut;
+      while ((cut = buffer.indexOf("\n\n")) >= 0) {
+        const chunk = buffer.slice(0, cut);
+        buffer = buffer.slice(cut + 2);
+        if (chunk.startsWith("data: ")) render(JSON.parse(chunk.slice(6)));
+      }
+    }
+  } catch (error) {
+    render({event: "error", message: "Connection lost: " + error.message});
+  } finally {
+    $("ask").disabled = false;
+  }
+}
+
+for (const [label, question] of EXAMPLES) {
+  const button = document.createElement("button");
+  button.className = "chip";
+  button.textContent = label;
+  button.title = question;
+  button.onclick = () => { $("question").value = question; ask(); };
+  $("examples").appendChild(button);
+}
+$("ask").onclick = ask;
+$("question").addEventListener("keydown", (e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) ask(); });
+</script>
+</body>
+</html>
