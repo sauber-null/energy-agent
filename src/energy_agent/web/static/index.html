@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="de">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -76,70 +76,77 @@
 <body>
 <main>
   <h1>Energy Agent · GPKE</h1>
-  <p class="lead">A tool-calling agent for German electricity market processes (supplier switch,
-    supply start/end, default supply). It searches the BNetzA GPKE documents, computes process
-    deadlines in German working days and looks up switch requests in a test database.</p>
+  <p class="lead">Ein KI-Agent für Prozesse der Marktkommunikation Strom (Lieferantenwechsel,
+    Lieferbeginn und -ende, Ersatzversorgung). Er durchsucht die GPKE-Dokumente der
+    Bundesnetzagentur, berechnet Fristen in Werktagen und prüft Wechselanfragen in einer
+    Testdatenbank.</p>
 
   <section class="panel">
     <div class="row" style="justify-content: space-between; margin-bottom: 10px;">
-      <div class="toggle" role="radiogroup" aria-label="Model">
+      <div class="toggle" role="radiogroup" aria-label="Modell">
         <label><input type="radio" name="provider" value="mistral" checked><span>Mistral API (EU)</span></label>
-        <label><input type="radio" name="provider" value="ollama"><span>Local model on this MacBook</span></label>
+        <label><input type="radio" name="provider" value="ollama"><span>Lokales Modell auf diesem MacBook</span></label>
       </div>
-      <span class="muted" style="font-size: 13px;">Answers in the language of the question</span>
+      <span class="muted" style="font-size: 13px;">Antwortet in der Sprache der Frage</span>
     </div>
-    <textarea id="question" maxlength="500" placeholder="Ask about GPKE processes, deadlines or a switch request (e.g. LW-2026-0003) …"></textarea>
+    <textarea id="question" maxlength="500" placeholder="Fragen Sie zu GPKE-Prozessen, Fristen oder einer Wechselanfrage (z. B. LW-2026-0003) …"></textarea>
     <div class="row" style="margin-top: 10px; justify-content: space-between;">
       <div class="row" id="examples"></div>
-      <button class="primary" id="ask">Ask</button>
+      <button class="primary" id="ask">Fragen</button>
     </div>
   </section>
 
   <div class="grid">
     <section class="panel">
-      <h2>Agent steps</h2>
-      <div id="steps"><p class="empty">Tool calls and model calls appear here while the agent works.</p></div>
+      <h2>Schritte des Agenten</h2>
+      <div id="steps"><p class="empty">Hier erscheinen die Modell- und Tool-Aufrufe, während der Agent arbeitet.</p></div>
     </section>
     <section class="panel">
-      <h2>Answer</h2>
-      <div id="answer" class="answer"><p class="empty">The answer names its source in the documents.</p></div>
+      <h2>Antwort</h2>
+      <div id="answer" class="answer"><p class="empty">Die Antwort nennt ihre Quelle in den Dokumenten.</p></div>
     </section>
   </div>
 
   <section class="panel about">
-    <h2>How it works</h2>
+    <h2>So funktioniert es</h2>
     <ul>
-      <li><strong>RAG:</strong> GPKE parts 1, 2, 4 and decision BK6-22-024 (231 pages) are chunked by section, embedded locally with bge-m3 and searched in PostgreSQL/pgvector (vector + German full-text).</li>
-      <li><strong>Tools:</strong> <code>search_documents</code>, <code>calculate_deadline</code> (rule table from GPKE part 2, working days incl. all state holidays, 24.12./31.12.), <code>get_switch_status</code> (fictional test data).</li>
-      <li><strong>Loop:</strong> plain tool-calling loop, provider-agnostic (Mistral API or Ollama), with a guardrail that rejects answers given before any tool result.</li>
-      <li><strong>Evaluation:</strong> 29 golden questions with deterministic checks: Mistral 86–90 %, the same model locally 79 %.</li>
+      <li><strong>RAG:</strong> GPKE Teil 1, 2 und 4 sowie der Beschluss BK6-22-024 (231 Seiten) sind nach Abschnitten zerlegt, lokal mit bge-m3 eingebettet und in PostgreSQL/pgvector durchsuchbar (Vektor- und deutsche Volltextsuche).</li>
+      <li><strong>Tools:</strong> <code>search_documents</code>, <code>calculate_deadline</code> (Regeltabelle aus GPKE Teil 2, Werktage inkl. aller Landesfeiertage, 24.12./31.12.), <code>get_switch_status</code> (fiktive Testdaten).</li>
+      <li><strong>Ablauf:</strong> einfacher Tool-Calling-Loop, unabhängig vom Anbieter (Mistral API oder Ollama), mit einer Guardrail, die Antworten ohne Tool-Ergebnis zurückweist.</li>
+      <li><strong>Evaluation:</strong> 29 Golden Questions mit deterministischen Prüfungen: Mistral 86–90 %, dasselbe Modell lokal 79 %.</li>
     </ul>
   </section>
 </main>
 
 <script>
 const EXAMPLES = [
-  ["Status + deadline", "Wie ist der Status der Wechselanfrage LW-2026-0003 und bis wann muss der Netzbetreiber spätestens antworten?"],
-  ["Deadline over Christmas", "Ein Lieferant hat seine Anmeldung zum Lieferbeginn am 23.12.2026 um 10:00 Uhr gesendet. Bis wann muss der Netzbetreiber die Anmeldung spätestens ablehnen?"],
-  ["Default supply", "Wer beliefert einen Letztverbraucher, der Strom entnimmt, ohne dass ein Liefervertrag besteht?"],
-  ["Sent in time?", "Wurde die Anmeldung LW-2026-0007 fristgerecht für den gewünschten Lieferbeginn gesendet?"],
+  ["Status + Frist", "Wie ist der Status der Wechselanfrage LW-2026-0003 und bis wann muss der Netzbetreiber spätestens antworten?"],
+  ["Frist über Weihnachten", "Ein Lieferant hat seine Anmeldung zum Lieferbeginn am 23.12.2026 um 10:00 Uhr gesendet. Bis wann muss der Netzbetreiber die Anmeldung spätestens ablehnen?"],
+  ["Ersatzversorgung", "Wer beliefert einen Letztverbraucher, der Strom entnimmt, ohne dass ein Liefervertrag besteht?"],
+  ["Fristgerecht?", "Wurde die Anmeldung LW-2026-0007 fristgerecht für den gewünschten Lieferbeginn gesendet?"],
 ];
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
 
-// Minimal Markdown for model answers: escape first, then bold, inline code, lists, paragraphs.
+// Minimal Markdown for model answers: escape first, then bold, italics, inline code, lists, paragraphs.
 function markdown(text) {
   const inline = (s) => esc(s)
     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
     .replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, "$1<em>$2</em>")
     .replace(/`([^`]+)`/g, "<code>$1</code>");
+  const item = /^\s*([-*]|\d+\.)\s+/;
+  // A block may mix lines of text and list items ("**Hintergrund:**" followed by "- ...").
   return text.trim().split(/\n{2,}/).map((block) => {
-    const lines = block.split("\n");
-    if (lines.every((l) => /^\s*([-*]|\d+\.)\s+/.test(l))) {
-      return "<ul>" + lines.map((l) => "<li>" + inline(l.replace(/^\s*([-*]|\d+\.)\s+/, "")) + "</li>").join("") + "</ul>";
+    let html = "", para = [], items = [];
+    const endPara = () => { if (para.length) html += "<p>" + para.map((l) => inline(l.replace(/^#+\s*/, ""))).join("<br>") + "</p>"; para = []; };
+    const endList = () => { if (items.length) html += "<ul>" + items.map((l) => "<li>" + inline(l.replace(item, "")) + "</li>").join("") + "</ul>"; items = []; };
+    for (const line of block.split("\n")) {
+      if (item.test(line)) { endPara(); items.push(line); } else { endList(); para.push(line); }
     }
-    return "<p>" + lines.map((l) => inline(l.replace(/^#+\s*/, ""))).join("<br>") + "</p>";
+    endPara();
+    endList();
+    return html;
   }).join("");
 }
 
@@ -155,34 +162,34 @@ function addStep(html, cls = "") {
 function render(event) {
   switch (event.event) {
     case "run_start":
-      addStep(`Model <strong>${esc(event.provider)}</strong> · <code>${esc(event.model)}</code>`);
+      addStep(`Modell <strong>${esc(event.provider)}</strong> · <code>${esc(event.model)}</code>`);
       break;
     case "llm_call": {
-      const next = event.tool_calls.length ? "requests " + event.tool_calls.map((t) => `<code>${esc(t)}</code>`).join(", ") : "writes the answer";
-      addStep(`LLM call ${event.step} · ${event.latency_ms} ms · ${event.prompt_tokens + event.completion_tokens} tokens → ${next}`, "muted");
+      const next = event.tool_calls.length ? "ruft " + event.tool_calls.map((t) => `<code>${esc(t)}</code>`).join(", ") + " auf" : "schreibt die Antwort";
+      addStep(`LLM-Aufruf ${event.step} · ${event.latency_ms} ms · ${(event.prompt_tokens + event.completion_tokens).toLocaleString("de-DE")} Tokens → ${next}`, "muted");
       break;
     }
     case "tool_call": {
       const args = JSON.stringify(event.arguments, null, 1);
-      const status = event.error ? `<span class="badge no">error</span>` : `<span class="badge ok">ok</span>`;
+      const status = event.error ? `<span class="badge no">Fehler</span>` : `<span class="badge ok">ok</span>`;
       addStep(`${status}<strong>${esc(event.tool)}</strong><pre>${esc(args)}</pre>
-        <details><summary>result</summary><pre>${esc(event.result)}</pre></details>`, "tool");
+        <details><summary>Ergebnis</summary><pre>${esc(event.result)}</pre></details>`, "tool");
       break;
     }
     case "guardrail":
-      addStep("Guardrail: answer without a tool result rejected, the model is asked to use a tool.", "guard");
+      addStep("Guardrail: Antwort ohne Tool-Ergebnis zurückgewiesen, das Modell soll ein Tool nutzen.", "guard");
       break;
     case "answer": {
       const badge = event.grounded
-        ? `<span class="badge ok">based on tool results</span>`
-        : `<span class="badge no">not grounded: no tool result</span>`;
-      $("answer").innerHTML = badge + markdown(event.answer || "(empty answer)") +
-        `<div class="stats">${event.llm_calls} LLM calls · ${event.tool_calls} tool calls · ${event.tokens.toLocaleString()} tokens · ${(event.latency_ms / 1000).toFixed(1)} s</div>`;
+        ? `<span class="badge ok">auf Tool-Ergebnissen gestützt</span>`
+        : `<span class="badge no">nicht belegt: kein Tool-Ergebnis</span>`;
+      $("answer").innerHTML = badge + markdown(event.answer || "(leere Antwort)") +
+        `<div class="stats">${event.llm_calls} LLM-Aufrufe · ${event.tool_calls} Tool-Aufrufe · ${event.tokens.toLocaleString("de-DE")} Tokens · ${(event.latency_ms / 1000).toLocaleString("de-DE", {maximumFractionDigits: 1})} s</div>`;
       break;
     }
     case "error":
       addStep(esc(event.message), "err");
-      $("answer").innerHTML = `<p class="empty">No answer.</p>`;
+      $("answer").innerHTML = `<p class="empty">Keine Antwort.</p>`;
       break;
   }
 }
@@ -193,7 +200,7 @@ async function ask() {
   const provider = document.querySelector("input[name=provider]:checked").value;
   $("ask").disabled = true;
   $("steps").innerHTML = "";
-  $("answer").innerHTML = `<p class="empty">Working …</p>`;
+  $("answer").innerHTML = `<p class="empty">Arbeitet …</p>`;
   try {
     // Built from origin + path so the URL never carries user:password, which fetch rejects.
     const endpoint = location.origin + location.pathname.replace(/[^/]*$/, "") + "api/ask";
@@ -223,7 +230,7 @@ async function ask() {
       }
     }
   } catch (error) {
-    render({event: "error", message: "Connection lost: " + error.message});
+    render({event: "error", message: "Verbindung unterbrochen: " + error.message});
   } finally {
     $("ask").disabled = false;
   }

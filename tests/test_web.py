@@ -91,7 +91,7 @@ def test_agent_failure_becomes_an_error_event():
     events = read_events(
         make_client(broken).post("/api/ask", json={"question": "Frist?"}, auth=AUTH)
     )
-    assert events == [{"event": "error", "message": "The agent failed, see server log."}]
+    assert events == [{"event": "error", "message": "Der Agent ist auf einen Fehler gestoßen."}]
 
 
 def test_rate_limit_per_minute():
@@ -120,7 +120,7 @@ def test_second_question_while_busy_is_rejected():
     busy = client.post("/api/ask", json={"question": "zwei"}, auth=AUTH)
     release.set()
     first.join(5)
-    assert busy.status_code == 429 and "Another question" in busy.json()["detail"]
+    assert busy.status_code == 429 and "andere Frage" in busy.json()["detail"]
 
 
 def test_rate_limiter_window_slides():

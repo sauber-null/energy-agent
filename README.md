@@ -6,7 +6,7 @@ documents, calculates process deadlines in German working days and looks up supp
 requests in a test database. The same agent runs on a hosted EU model (Mistral) and on a
 local model (Ollama), and a golden-question evaluation measures both.
 
-![Web demo: the agent calls calculate_deadline and answers with the deadline and its source](docs/demo.jpg)
+![Web demo (German UI): the agent calls calculate_deadline, skips the Christmas holidays and answers with the deadline and its source](docs/demo.png)
 
 ## What it shows
 
@@ -268,10 +268,11 @@ uv run pytest -m eval                                          # fails below 80 
 
 ## Web demo
 
-`energy-agent serve` starts a small FastAPI app on `127.0.0.1:8000`: one page with a
-question box, a switch between the Mistral API and the local model, and a live view of
-every agent step (model calls, tool calls with arguments and results, guardrail) streamed
-as server-sent events, followed by the answer (screenshot at the top).
+`energy-agent serve` starts a small FastAPI app on `127.0.0.1:8000`: one page in German,
+the language of its users, with a question box, a switch between the Mistral API and the
+local model, and a live view of every agent step (model calls, tool calls with arguments
+and results, guardrail) streamed as server-sent events, followed by the answer (screenshot
+at the top).
 
 For interviews it runs on a password-protected subdomain of my website through a
 Cloudflare Tunnel from my laptop: it is reachable while the laptop is on and costs nothing.

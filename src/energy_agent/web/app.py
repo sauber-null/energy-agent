@@ -44,7 +44,7 @@ class RateLimiter:
     """Global sliding-window limits; the demo has one user at a time, not per-IP quotas."""
 
     def __init__(self, per_minute: int, per_day: int, clock: Callable[[], float] = time.time):
-        self.limits = ((60, per_minute), (86_400, per_day))
+        self.limits = ((60, per_minute, "Minute"), (86_400, per_day, "Tag"))
         self.clock = clock
         self.calls: deque[float] = deque()
         self._lock = threading.Lock()
@@ -54,9 +54,12 @@ class RateLimiter:
             now = self.clock()
             while self.calls and now - self.calls[0] > 86_400:
                 self.calls.popleft()
-            for window, limit in self.limits:
+            # Messages are shown on the (German) demo page as they are.
+            for window, limit, unit in self.limits:
                 if sum(1 for t in self.calls if now - t <= window) >= limit:
-                    raise HTTPException(429, f"Limit of {limit} questions per {window} s reached.")
+                    raise HTTPException(
+                        429, f"Limit erreicht: höchstens {limit} Fragen pro {unit}."
+                    )
             self.calls.append(now)
 
 
@@ -95,7 +98,7 @@ def create_app(settings: Settings, run_agent: AgentRunner) -> FastAPI:
 
     def require_password(credentials: Annotated[HTTPBasicCredentials, Depends(basic)]) -> None:
         if not secrets.compare_digest(credentials.password.encode(), password):
-            raise HTTPException(401, "Wrong password", headers={"WWW-Authenticate": "Basic"})
+            raise HTTPException(401, "Falsches Passwort", headers={"WWW-Authenticate": "Basic"})
 
     app = FastAPI(title="energy-agent demo", docs_url=None, redoc_url=None, openapi_url=None)
 
@@ -116,7 +119,9 @@ def create_app(settings: Settings, run_agent: AgentRunner) -> FastAPI:
     @app.post("/api/ask", dependencies=[Depends(require_password)])
     def ask(request: AskRequest) -> StreamingResponse:
         if not busy.acquire(blocking=False):
-            raise HTTPException(429, "Another question is being answered, please wait.")
+            raise HTTPException(
+                429, "Gerade wird eine andere Frage beantwortet, bitte kurz warten."
+            )
         try:
             limiter.check()
         except HTTPException:
@@ -146,7 +151,9 @@ def create_app(settings: Settings, run_agent: AgentRunner) -> FastAPI:
                 )
             except Exception:
                 log.exception("agent run failed")
-                events.put({"event": "error", "message": "The agent failed, see server log."})
+                events.put(
+                    {"event": "error", "message": "Der Agent ist auf einen Fehler gestoßen."}
+                )
             finally:
                 events.put(None)
                 busy.release()
